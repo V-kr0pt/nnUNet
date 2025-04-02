@@ -1,6 +1,7 @@
 import os
 import shutil
 import json
+#from nnunetv2.dataset_conversion.generate_dataset_json import generate_dataset_json
 from nnunetv2.paths import nnUNet_raw
 
 # Function to rename and move files
@@ -19,7 +20,8 @@ def organize_files(src_input_dir, src_output_dir, dest_images_dir, dest_labels_d
 
 if __name__ == '__main__':
     # Define paths
-    base_dir = '../media/source/sam_segmentation'  # Change this to your dataset path
+    # it should be run from first nnUnet folder!
+    base_dir = '../media/source/breastpectoral_sam_segmentation'  # Change this to your dataset path
     dataset_id = '995'  # Change this to your desired dataset ID
     dataset_name = 'BreastPectoralSegmentation'  # Change this to your desired dataset name
 
