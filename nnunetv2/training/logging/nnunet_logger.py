@@ -51,50 +51,98 @@ class nnUNetLogger(object):
                 if len(self.my_fantastic_logging['ema_fg_dice']) > 0 else value
             self.log('ema_fg_dice', new_ema_pseudo_dice, epoch)
 
-    def plot_progress_png(self, output_folder):
+    def plot_progress_png(self, output_folder: str, plot_different_figures: bool = False):
         # we infer the epoch form our internal logging
         epoch = min([len(i) for i in self.my_fantastic_logging.values()]) - 1  # lists of epoch 0 have len 1
         sns.set(font_scale=2.5)
-        fig, ax_all = plt.subplots(3, 1, figsize=(30, 54))
-        # regular progress.png as we are used to from previous nnU-Net versions
-        ax = ax_all[0]
-        ax2 = ax.twinx()
-        x_values = list(range(epoch + 1))
-        ax.plot(x_values, self.my_fantastic_logging['train_losses'][:epoch + 1], color='b', ls='-', label="loss_tr", linewidth=4)
-        ax.plot(x_values, self.my_fantastic_logging['val_losses'][:epoch + 1], color='r', ls='-', label="loss_val", linewidth=4)
-        ax2.plot(x_values, self.my_fantastic_logging['mean_fg_dice'][:epoch + 1], color='g', ls='dotted', label="pseudo dice",
-                 linewidth=3)
-        ax2.plot(x_values, self.my_fantastic_logging['ema_fg_dice'][:epoch + 1], color='g', ls='-', label="pseudo dice (mov. avg.)",
-                 linewidth=4)
-        ax.set_xlabel("epoch")
-        ax.set_ylabel("loss")
-        ax2.set_ylabel("pseudo dice")
-        ax.legend(loc=(0, 1))
-        ax2.legend(loc=(0.2, 1))
 
-        # epoch times to see whether the training speed is consistent (inconsistent means there are other jobs
-        # clogging up the system)
-        ax = ax_all[1]
-        ax.plot(x_values, [i - j for i, j in zip(self.my_fantastic_logging['epoch_end_timestamps'][:epoch + 1],
-                                                 self.my_fantastic_logging['epoch_start_timestamps'])][:epoch + 1], color='b',
-                ls='-', label="epoch duration", linewidth=4)
-        ylim = [0] + [ax.get_ylim()[1]]
-        ax.set(ylim=ylim)
-        ax.set_xlabel("epoch")
-        ax.set_ylabel("time [s]")
-        ax.legend(loc=(0, 1))
+        if not plot_different_figures:
+            fig, ax_all = plt.subplots(3, 1, figsize=(30, 54))
+            # regular progress.png as we are used to from previous nnU-Net versions
+            ax = ax_all[0]
+            ax2 = ax.twinx()
+            x_values = list(range(epoch + 1))
+            ax.plot(x_values, self.my_fantastic_logging['train_losses'][:epoch + 1], color='b', ls='-', label="loss_tr", linewidth=4)
+            ax.plot(x_values, self.my_fantastic_logging['val_losses'][:epoch + 1], color='r', ls='-', label="loss_val", linewidth=4)
+            ax2.plot(x_values, self.my_fantastic_logging['mean_fg_dice'][:epoch + 1], color='g', ls='dotted', label="pseudo dice",
+                     linewidth=3)
+            ax2.plot(x_values, self.my_fantastic_logging['ema_fg_dice'][:epoch + 1], color='g', ls='-', label="pseudo dice (mov. avg.)",
+                     linewidth=4)
+            ax.set_xlabel("epoch")
+            ax.set_ylabel("loss")
+            ax2.set_ylabel("pseudo dice")
+            ax.legend(loc=(0, 1))
+            ax2.legend(loc=(0.2, 1))
 
-        # learning rate
-        ax = ax_all[2]
-        ax.plot(x_values, self.my_fantastic_logging['lrs'][:epoch + 1], color='b', ls='-', label="learning rate", linewidth=4)
-        ax.set_xlabel("epoch")
-        ax.set_ylabel("learning rate")
-        ax.legend(loc=(0, 1))
+            # epoch times to see whether the training speed is consistent (inconsistent means there are other jobs
+            # clogging up the system)
+            ax = ax_all[1]
+            ax.plot(x_values, [i - j for i, j in zip(self.my_fantastic_logging['epoch_end_timestamps'][:epoch + 1],
+                                                     self.my_fantastic_logging['epoch_start_timestamps'])][:epoch + 1], color='b',
+                    ls='-', label="epoch duration", linewidth=4)
+            ylim = [0] + [ax.get_ylim()[1]]
+            ax.set(ylim=ylim)
+            ax.set_xlabel("epoch")
+            ax.set_ylabel("time [s]")
+            ax.legend(loc=(0, 1))
 
-        plt.tight_layout()
+            # learning rate
+            ax = ax_all[2]
+            ax.plot(x_values, self.my_fantastic_logging['lrs'][:epoch + 1], color='b', ls='-', label="learning rate", linewidth=4)
+            ax.set_xlabel("epoch")
+            ax.set_ylabel("learning rate")
+            ax.legend(loc=(0, 1))
 
-        fig.savefig(join(output_folder, "progress.png"))
-        plt.close()
+            plt.tight_layout()
+
+            fig.savefig(join(output_folder, "progress.png"))
+            plt.close()
+        
+        else:
+            # Create 3 plots: progress.png, time_by_epoch.png, learning_rate.png
+            fig, ax = plt.subplots(1,1, figsize=(30, 18))
+            x_values = list(range(epoch + 1))
+            ax2 = ax.twinx()
+            ax.plot(x_values, self.my_fantastic_logging['train_losses'][:epoch + 1], color='b', ls='-', label="loss_tr", linewidth=4)
+            ax.plot(x_values, self.my_fantastic_logging['val_losses'][:epoch + 1], color='r', ls='-', label="loss_val", linewidth=4)
+            ax2.plot(x_values, self.my_fantastic_logging['mean_fg_dice'][:epoch + 1], color='g', ls='dotted', label="pseudo dice",
+                     linewidth=3)
+            ax2.plot(x_values, self.my_fantastic_logging['ema_fg_dice'][:epoch + 1], color='g', ls='-', label="pseudo dice (mov. avg.)",
+                     linewidth=4)
+            ax.set_xlabel("epoch")
+            ax.set_ylabel("loss")
+            ax2.set_ylabel("pseudo dice")
+            ax.legend(loc=(0, 1))
+            ax2.legend(loc=(0.2, 1))
+            plt.tight_layout()
+            fig.savefig(join(output_folder, "progress.png"))
+            plt.close()
+
+            # Plot and save time_by_epoch.png
+            fig, ax = plt.subplots(1,1, figsize=(30, 18))
+            ax.plot(x_values, [i - j for i, j in zip(self.my_fantastic_logging['epoch_end_timestamps'][:epoch + 1],
+                                                     self.my_fantastic_logging['epoch_start_timestamps'])][:epoch + 1], color='b',
+                    ls='-', label="epoch duration", linewidth=4)
+            ylim = [0] + [ax.get_ylim()[1]]
+            ax.set(ylim=ylim)
+            ax.set_xlabel("epoch")
+            ax.set_ylabel("time [s]")
+            ax.legend(loc=(0, 1))
+            plt.tight_layout()
+            fig.savefig(join(output_folder, "time_by_epoch.png"))
+            plt.close()
+
+            # Plot and save learning_rate.png
+            fig, ax = plt.subplots(1,1, figsize=(30, 18))
+            ax.plot(x_values, self.my_fantastic_logging['lrs'][:epoch + 1], color='b', ls='-', label="learning rate", linewidth=4)
+            ax.set_xlabel("epoch")
+            ax.set_ylabel("learning rate")
+            ax.legend(loc=(0, 1))
+            plt.tight_layout()
+            fig.savefig(join(output_folder, "learning_rate.png"))
+            plt.close()
+
+
 
     def get_checkpoint(self):
         return self.my_fantastic_logging

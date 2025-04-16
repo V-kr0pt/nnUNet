@@ -68,7 +68,7 @@ from nnunetv2.utilities.plans_handling.plans_handler import PlansManager
 
 
 class nnUNetTrainer(object):
-    def __init__(self, plans: dict, configuration: str, fold: int, dataset_json: dict,
+    def __init__(self, plans: dict, configuration: str, fold: int, dataset_json: dict, plot_different_figures: bool = False,
                  device: torch.device = torch.device('cuda')):
         # From https://grugbrain.dev/. Worth a read ya big brains ;-)
 
@@ -186,6 +186,7 @@ class nnUNetTrainer(object):
         ### checkpoint saving stuff
         self.save_every = 50
         self.disable_checkpointing = False
+        self.plot_different_figures = plot_different_figures
 
         self.was_initialized = False
 
@@ -1142,7 +1143,7 @@ class nnUNetTrainer(object):
             self.save_checkpoint(join(self.output_folder, 'checkpoint_best.pth'))
 
         if self.local_rank == 0:
-            self.logger.plot_progress_png(self.output_folder)
+            self.logger.plot_progress_png(self.output_folder, self.plot_different_figures)
 
         self.current_epoch += 1
 
