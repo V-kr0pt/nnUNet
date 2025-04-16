@@ -250,7 +250,7 @@ def run_training_entry():
                     help="Use this to set the device the training should run with. Available options are 'cuda' "
                          "(GPU), 'cpu' (CPU) and 'mps' (Apple M1/M2). Do NOT use this to set which GPU ID! "
                          "Use CUDA_VISIBLE_DEVICES=X nnUNetv2_train [...] instead!")
-    parser.add_argument('--plot_different_figures', action='store_false', required=False,
+    parser.add_argument('--plot_different_figures', action='store_true', required=False,
                         help="[OPTIONAL] If set, saves training progress, time per epoch, and learning rate as three separate plots. "
                              "By default, all metrics are combined into a single plot.")
     args = parser.parse_args()
