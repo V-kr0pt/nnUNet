@@ -13,7 +13,7 @@ def run_inference(input_folder, output_folder):
         '-d', 'Dataset995_BreastPectoralSegmentation',
         '-i', input_folder,
         '-o', output_folder,
-        '-f', '0', '1', '2', '3', '4',
+        '-f', '0',
         '-tr', 'nnUNetTrainer',
         '-c', '3d_fullres',
         '-p', 'nnUNetPlans'
