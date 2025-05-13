@@ -1,7 +1,8 @@
 import subprocess
 import os
+from run_utils import downsample_nii_file, flip_nii_file
 
-class Inferece:
+class Inference:
     def __init__(self, input_folder, output_folder, skip_pre=False, skip_post=False):
         self.input_folder = input_folder
         self.output_folder = output_folder
@@ -18,11 +19,29 @@ class Inferece:
 
     
     def run_preprocessing(self):
-        os.makedirs(self.input_folder + '_PP', exist_ok=True)
-        print(f"Running preprocessing...\nInput: {self.input_folder}\nOutput: {self.input_folder + '_PP'}")
-        self.input_folder = self.input_folder + '_PP'
-        ... # I'll put a preprocessing here (I should resize the images)
+        input_folder = os.path.basename(self.input_folder) if os.path.basename(self.input_folder) else 'input'
+        input_folder += '_PP'
+        input_folder = os.path.join(self.input_folder, input_folder)
+        os.makedirs(input_folder, exist_ok=True)
+        print(f"Running preprocessing...\nInput: {self.input_folder}\nOutput: {input_folder}")
+        
+        # Downsample and flip
+        for file in os.listdir(self.input_folder):
+            if file.endswith('.nii.gz'):
+                input_file = os.path.join(self.input_folder, file)
+                downsampled_file = f"downsampled_{file}"
+                
+                downsample_nii_file(nii_file = input_file,
+                                    downsample_factor = 10,
+                                    save_dir = input_folder,
+                                    save_name = downsampled_file)
+                
+                if 'R_MLO' in file:
+                    flip_nii_file(os.path.join(input_folder, downsampled_file)) # flip the input image
 
+
+        self.input_folder = input_folder # Update input_folder to the new preprocessed folder
+        print(f"Preprocessing completed. Preprocessed files saved to {input_folder}.")
 
     def run_inference(self):
         print(f"Running inference...\nInput: {self.input_folder}\nOutput: {self.output_folder}")
@@ -41,17 +60,35 @@ class Inferece:
 
 
     def run_postprocessing(self):
-        output_folder_pp = self.output_folder + '_PP'
-        print(f"Running postprocessing...\nInput: {self.output_folder}\nOutput: {output_folder_pp}")
+        output_folder = os.path.basename(self.output_folder) if os.path.basename(self.output_folder) else 'output'
+        output_folder += '_PP'
+        output_folder = os.path.join(self.output_folder, output_folder)
+        os.makedirs(output_folder, exist_ok=True)
+        print(f"Running postprocessing...\nInput: {self.output_folder}\nOutput: {output_folder}")
         command = [
             'nnUNetv2_apply_postprocessing',
             '-i', self.output_folder,
-            '-o', output_folder_pp,
+            '-o', self.output_folder,
             '-pp_pkl_file', '/mnt/d/Users/UFPB/vitor/nn_unet/media/nnUNet_results/Dataset995_BreastPectoralSegmentation/nnUNetTrainer__nnUNetPlans__3d_fullres/crossval_results_folds_0_1_2_3_4/postprocessing.pkl',
             '-np', '8',
             '-plans_json', '/mnt/d/Users/UFPB/vitor/nn_unet/media/nnUNet_results/Dataset995_BreastPectoralSegmentation/nnUNetTrainer__nnUNetPlans__3d_fullres/crossval_results_folds_0_1_2_3_4/plans.json'
         ]
         subprocess.run(command, check=True)
+
+        # Upsample and flip
+        for file in os.listdir(self.output_folder):
+            if file.endswith('.nii.gz'):
+                output_file = os.path.join(self.output_folder, file)
+                downsampled_file = file.replace('downsampled_', '')
+                
+                # upsample here
+                downsample_nii_file(nii_file = output_file,
+                                    downsample_factor = 0.1,
+                                    save_dir = output_folder,
+                                    save_name = downsampled_file)
+                
+                if 'R_MLO' in file:
+                    flip_nii_file(os.path.join(output_folder, downsampled_file)) # flip the output image
 
 
     def run(self):
@@ -76,5 +113,9 @@ if __name__ == "__main__":
     parser.add_argument('--skip_post', action='store_true', help='Skip postprocessing after inference')    
     args = parser.parse_args()
     
-    inferece = Inferece(args.input_folder, args.output_folder, args.skip_pre, args.skip_post)
-    inferece.run()
+    #input_folder = '../media/input'
+    #output_folder = '../media/output'
+    #inference = Inference(input_folder, output_folder, False, True)
+
+    inference = Inference(args.input_folder, args.output_folder, args.skip_pre, args.skip_post)
+    inference.run()
