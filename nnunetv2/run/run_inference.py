@@ -1,6 +1,7 @@
 import subprocess
 import os
 from run_utils import downsample_nii_file, flip_nii_file
+from post_processing import open_run_and_save_nifti_postprocess
 
 class Inference:
     def __init__(self, input_folder, output_folder, skip_pre=False, skip_post=False):
@@ -79,18 +80,26 @@ class Inference:
         for file in os.listdir(self.output_folder):
             if file.endswith('.nii.gz'):
                 output_file = os.path.join(self.output_folder, file)
-                downsampled_file = file.replace('downsampled_', '')
+                upsampled_file = file.replace('downsampled_', '')
+
+                # postprocess the mask
+                open_run_and_save_nifti_postprocess(nii_img_name = file,
+                                                    nii_img_path = self.output_folder,
+                                                    save_dir = output_folder,
+                                                    save_name = upsampled_file)
+                
+                # flip the output image
+                if 'R_MLO' in file:
+                    flip_nii_file(os.path.join(output_folder, upsampled_file)) 
                 
                 # upsample here
                 downsample_nii_file(nii_file = output_file,
                                     downsample_factor = 0.1,
                                     save_dir = output_folder,
-                                    save_name = downsampled_file)
+                                    save_name = upsampled_file)
                 
-                if 'R_MLO' in file:
-                    flip_nii_file(os.path.join(output_folder, downsampled_file)) # flip the output image
-
-
+        print(f"Postprocessing completed. Postprocessed files saved to {output_folder}.")
+    
     def run(self):
         # Preprocess input if not skipped
         if not self.skip_pre:
