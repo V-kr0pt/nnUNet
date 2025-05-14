@@ -1,3 +1,4 @@
+import os
 import cv2
 import numpy as np
 import nibabel as nib
@@ -94,8 +95,7 @@ def open_run_and_save_nifti_postprocess(nii_img_name, nii_img_path, save_dir, sa
     
 
 if __name__ == '__main__':
-    import os
-
+    
     #nii_img_name = '4186065_PROC_R_MLO_20120831162844'
     nii_img_name = '01483046_PROC_R_MLO_20220918204538'
     #nii_img_name = '3971372_PROC_L_MLO_20120726155832'
