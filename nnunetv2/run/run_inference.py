@@ -20,11 +20,11 @@ class Inference:
 
     
     def run_preprocessing(self):
-        input_folder = os.path.basename(self.input_folder) if os.path.basename(self.input_folder) else 'input'
-        input_folder += '_PP'
-        input_folder = os.path.join(self.input_folder, input_folder)
-        os.makedirs(input_folder, exist_ok=True)
-        print(f"Running preprocessing...\nInput: {self.input_folder}\nOutput: {input_folder}")
+        input_folder_pp = os.path.basename(self.input_folder) if os.path.basename(self.input_folder) else 'input'
+        input_folder_pp += '_PP'
+        input_folder_pp = os.path.join(self.input_folder, input_folder_pp)
+        os.makedirs(input_folder_pp, exist_ok=True)
+        print(f"Running preprocessing...\nInput: {self.input_folder}\nOutput: {input_folder_pp}")
         
         # Downsample and flip
         for file in os.listdir(self.input_folder):
@@ -34,15 +34,15 @@ class Inference:
                 
                 downsample_nii_file(nii_file = input_file,
                                     downsample_factor = 10,
-                                    save_dir = input_folder,
+                                    save_dir = input_folder_pp,
                                     save_name = downsampled_file)
                 
                 if 'R_MLO' in file:
-                    flip_nii_file(os.path.join(input_folder, downsampled_file)) # flip the input image
+                    flip_nii_file(os.path.join(input_folder_pp, downsampled_file)) # flip the input image
 
 
-        self.input_folder = input_folder # Update input_folder to the new preprocessed folder
-        print(f"Preprocessing completed. Preprocessed files saved to {input_folder}.")
+        self.input_folder = input_folder_pp # Update input_folder to the new preprocessed folder
+        print(f"Preprocessing completed. Preprocessed files saved to {input_folder_pp}.")
 
     def run_inference(self):
         print(f"Running inference...\nInput: {self.input_folder}\nOutput: {self.output_folder}")
@@ -88,9 +88,10 @@ class Inference:
                                                     save_dir = output_folder,
                                                     save_name = upsampled_file)
                 
+                output_file = os.path.join(output_folder, upsampled_file)
                 # flip the output image
                 if 'R_MLO' in file:
-                    flip_nii_file(os.path.join(output_folder, upsampled_file)) 
+                    flip_nii_file(output_file) 
                 
                 # upsample here
                 downsample_nii_file(nii_file = output_file,
@@ -115,16 +116,16 @@ class Inference:
 if __name__ == "__main__":
     import argparse
 
+    DEFAULT_INPUT_FOLDER = os.path.join('..','media','input')
+    DEFAULT_OUTPUT_FOLDER = os.path.join('..','media','output')
+
     parser = argparse.ArgumentParser(description="Run nnUNet inference and optional postprocessing.")
-    parser.add_argument('-i', '--input_folder', required=True, help='Path to the input folder')
-    parser.add_argument('-o', '--output_folder', required=True, help='Path to the output folder')
+    parser.add_argument('-i', '--input_folder', default=DEFAULT_INPUT_FOLDER, help='Path to the input folder')
+    parser.add_argument('-o', '--output_folder', default=DEFAULT_OUTPUT_FOLDER, help='Path to the output folder')
     parser.add_argument('--skip_pre', action='store_true', help='Skip preprocessing before inference')
     parser.add_argument('--skip_post', action='store_true', help='Skip postprocessing after inference')    
     args = parser.parse_args()
     
-    #input_folder = '../media/input'
-    #output_folder = '../media/output'
-    #inference = Inference(input_folder, output_folder, False, True)
 
     inference = Inference(args.input_folder, args.output_folder, args.skip_pre, args.skip_post)
     inference.run()
