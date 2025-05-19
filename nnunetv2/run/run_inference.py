@@ -23,7 +23,11 @@ class Inference:
         input_folder_pp = os.path.basename(self.input_folder) if os.path.basename(self.input_folder) else 'input'
         input_folder_pp += '_PP'
         input_folder_pp = os.path.join(self.input_folder, input_folder_pp)
-        os.makedirs(input_folder_pp, exist_ok=True)
+        # if the preprocessed folder already exists, remove it
+        if os.path.exists(input_folder_pp):
+            subprocess.run(['rm', '-rf', input_folder_pp])
+        os.makedirs(input_folder_pp)
+        
         print(f"Running preprocessing...\nInput: {self.input_folder}\nOutput: {input_folder_pp}")
         
         # Downsample and flip
@@ -57,15 +61,15 @@ class Inference:
             '--disable_tta',
             '-npp', '1'
         ]
-        subprocess.run(command, check=True)
+        #subprocess.run(command, check=True)
 
 
     def run_postprocessing(self):
-        output_folder = os.path.basename(self.output_folder) if os.path.basename(self.output_folder) else 'output'
-        output_folder += '_PP'
-        output_folder = os.path.join(self.output_folder, output_folder)
-        os.makedirs(output_folder, exist_ok=True)
-        print(f"Running postprocessing...\nInput: {self.output_folder}\nOutput: {output_folder}")
+        output_folder_pp = os.path.basename(self.output_folder) if os.path.basename(self.output_folder) else 'output'
+        output_folder_pp += '_PP'
+        output_folder_pp = os.path.join(self.output_folder, output_folder_pp)
+        os.makedirs(output_folder_pp, exist_ok=True)
+        print(f"Running postprocessing...\nInput: {self.output_folder}\nOutput: {output_folder_pp}")
         command = [
             'nnUNetv2_apply_postprocessing',
             '-i', self.output_folder,
@@ -74,7 +78,7 @@ class Inference:
             '-np', '8',
             '-plans_json', '/mnt/d/Users/UFPB/vitor/nn_unet/media/nnUNet_results/Dataset995_BreastPectoralSegmentation/nnUNetTrainer__nnUNetPlans__3d_fullres/crossval_results_folds_0_1_2_3_4/plans.json'
         ]
-        subprocess.run(command, check=True)
+        #subprocess.run(command, check=True)
 
         # Upsample and flip
         for file in os.listdir(self.output_folder):
@@ -85,10 +89,10 @@ class Inference:
                 # postprocess the mask
                 open_run_and_save_nifti_postprocess(nii_img_name = file,
                                                     nii_img_path = self.output_folder,
-                                                    save_dir = output_folder,
+                                                    save_dir = output_folder_pp,
                                                     save_name = upsampled_file)
                 
-                output_file = os.path.join(output_folder, upsampled_file)
+                output_file = os.path.join(output_folder_pp, upsampled_file)
                 # flip the output image
                 if 'R_MLO' in file:
                     flip_nii_file(output_file) 
@@ -96,10 +100,10 @@ class Inference:
                 # upsample here
                 downsample_nii_file(nii_file = output_file,
                                     downsample_factor = 0.1,
-                                    save_dir = output_folder,
+                                    save_dir = output_folder_pp,
                                     save_name = upsampled_file)
                 
-        print(f"Postprocessing completed. Postprocessed files saved to {output_folder}.")
+        print(f"Postprocessing completed. Postprocessed files saved to {output_folder_pp}.")
     
     def run(self):
         # Preprocess input if not skipped
