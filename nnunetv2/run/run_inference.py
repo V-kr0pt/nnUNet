@@ -20,6 +20,49 @@ class Inference:
             os.makedirs(output_folder)
             print(f"Output folder {output_folder} created.")
 
+    def preprocess_file(self, file, input_folder_pp):
+        if file.endswith('.nii.gz'):
+            input_file = os.path.join(self.input_folder, file)
+            downsampled_file = file.replace('.nii.gz', '')
+            downsampled_file = f"downsampled_{downsampled_file}_0000.nii.gz"
+            
+            # Downsample e salva o fator real
+            real_factor = downsample_nii_file(
+                nii_file=input_file,
+                downsample_factor=self.downsample_factor,
+                save_dir=input_folder_pp,
+                save_name=downsampled_file
+            )
+            self.files_shape_factor[file] = (1 / real_factor[0], 1 / real_factor[1], real_factor[2])
+            
+            # Flip se for uma imagem R_MLO
+            if 'R_MLO' in file:
+                flip_nii_file(os.path.join(input_folder_pp, downsampled_file))
+
+    def postprocess_file(self, file, output_folder_pp):
+        if file.endswith('.nii.gz'):
+            output_file = os.path.join(self.output_folder, file)
+            upsampled_file = file.replace('downsampled_', '')
+            upsampled_file = upsampled_file.replace('_0000', '')
+
+            # postprocess the mask
+            open_run_and_save_nifti_postprocess(nii_img_name = file,
+                                                nii_img_path = self.output_folder,
+                                                save_dir = output_folder_pp,
+                                                save_name = upsampled_file)
+            
+            output_file = os.path.join(output_folder_pp, upsampled_file)
+            # flip the output image
+            if 'R_MLO' in file:
+                flip_nii_file(output_file) 
+            
+            # upsample here
+            upsample_factor = self.files_shape_factor[upsampled_file]
+            upsample_nii_file(nii_file = output_file,
+                                upsample_factor = upsample_factor,
+                                save_dir = output_folder_pp,
+                                save_name = upsampled_file)
+
     
     def run_preprocessing(self):
         input_folder_pp = os.path.basename(self.input_folder) if os.path.basename(self.input_folder) else 'input'
@@ -32,24 +75,11 @@ class Inference:
         
         print(f"Running preprocessing...\nInput: {self.input_folder}\nOutput: {input_folder_pp}")
         
-        # Downsample and flip
+        # Parallelize file processing
         for file in os.listdir(self.input_folder):
-            if file.endswith('.nii.gz'):
-                input_file = os.path.join(self.input_folder, file)
-                
-                # downsample the input image and save the original shape
-                downsampled_file = f"downsampled_{file}"
-                real_factor = downsample_nii_file(nii_file = input_file,
-                                    downsample_factor = self.downsample_factor,
-                                    save_dir = input_folder_pp,
-                                    save_name = downsampled_file)
-                self.files_shape_factor[file] = (1/real_factor[0], 1/real_factor[1], real_factor[2]) # save the real factor for upsampling later
-                
-                # flip the input image if it is a right MLO view
-                if 'R_MLO' in file:
-                    flip_nii_file(os.path.join(input_folder_pp, downsampled_file)) # flip the input image
-
-
+                # Preprocess each file
+                self.preprocess_file(file, input_folder_pp)
+        
         self.input_folder = input_folder_pp # Update input_folder to the new preprocessed folder
         print(f"Preprocessing completed. Preprocessed files saved to {input_folder_pp}.")
 
@@ -87,27 +117,8 @@ class Inference:
 
         # Upsample and flip
         for file in os.listdir(self.output_folder):
-            if file.endswith('.nii.gz'):
-                output_file = os.path.join(self.output_folder, file)
-                upsampled_file = file.replace('downsampled_', '')
-
-                # postprocess the mask
-                open_run_and_save_nifti_postprocess(nii_img_name = file,
-                                                    nii_img_path = self.output_folder,
-                                                    save_dir = output_folder_pp,
-                                                    save_name = upsampled_file)
-                
-                output_file = os.path.join(output_folder_pp, upsampled_file)
-                # flip the output image
-                if 'R_MLO' in file:
-                    flip_nii_file(output_file) 
-                
-                # upsample here
-                upsample_factor = self.files_shape_factor[upsampled_file]
-                upsample_nii_file(nii_file = output_file,
-                                  upsample_factor = upsample_factor,
-                                  save_dir = output_folder_pp,
-                                  save_name = upsampled_file)
+            # Postprocess each file
+            self.postprocess_file(file, output_folder_pp)    
                 
         print(f"Postprocessing completed. Postprocessed files saved to {output_folder_pp}.")
     
