@@ -15,6 +15,25 @@ def open_nifti_image(nii_img_name:str, nii_img_path:str=None):
     nii_data = nii_img.get_fdata()
     return nii_data
 
+def upsample_nii_file(nii_file:str, upsample_factor:tuple, save_dir:str, save_name:str=None):
+    nii = nib.load(nii_file)
+    nii_data = nii.get_fdata()
+
+    assert len(upsample_factor) == 3, "Factor must be a tuple of 3 values."
+    assert upsample_factor[0] > 1 and upsample_factor[1] > 1, "Factors must be greater than 1."
+
+    upsampled_data = zoom(nii_data, upsample_factor, order=1)
+    
+    upsampled_nii = nib.Nifti1Image(upsampled_data, nii.affine, nii.header)
+    
+    if save_name:
+        output_path = os.path.join(save_dir, save_name)
+    else:
+        output_path = os.path.join(save_dir, os.path.basename(nii_file))
+        
+    nib.save(upsampled_nii, output_path)
+
+
 def downsample_nii_file(nii_file:str, downsample_factor:int, save_dir:str, save_name:str=None):
     nii = nib.load(nii_file)
     nii_data = nii.get_fdata()
@@ -30,6 +49,11 @@ def downsample_nii_file(nii_file:str, downsample_factor:int, save_dir:str, save_
         output_path = os.path.join(save_dir, os.path.basename(nii_file))
         
     nib.save(downsampled_nii, output_path)
+
+    real_factor = (downsampled_data.shape[0] / nii_data.shape[0], 
+                   downsampled_data.shape[1] / nii_data.shape[1], 
+                   1)
+    return real_factor
 
 def flip_nii_file(nii_file:str):
     nii = nib.load(nii_file)

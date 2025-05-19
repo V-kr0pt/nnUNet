@@ -1,6 +1,6 @@
 import subprocess
 import os
-from run_utils import downsample_nii_file, flip_nii_file
+from run_utils import downsample_nii_file, upsample_nii_file, flip_nii_file
 from post_processing import open_run_and_save_nifti_postprocess
 
 class Inference:
@@ -9,6 +9,8 @@ class Inference:
         self.output_folder = output_folder
         self.skip_pre = skip_pre
         self.skip_post = skip_post
+        self.downsample_factor = 10
+        self.files_shape_factor = {}
 
         # Validate input and output folders
         if not os.path.exists(input_folder):
@@ -34,13 +36,16 @@ class Inference:
         for file in os.listdir(self.input_folder):
             if file.endswith('.nii.gz'):
                 input_file = os.path.join(self.input_folder, file)
-                downsampled_file = f"downsampled_{file}"
                 
-                downsample_nii_file(nii_file = input_file,
-                                    downsample_factor = 10,
+                # downsample the input image and save the original shape
+                downsampled_file = f"downsampled_{file}"
+                real_factor = downsample_nii_file(nii_file = input_file,
+                                    downsample_factor = self.downsample_factor,
                                     save_dir = input_folder_pp,
                                     save_name = downsampled_file)
+                self.files_shape_factor[file] = (1/real_factor[0], 1/real_factor[1], real_factor[2]) # save the real factor for upsampling later
                 
+                # flip the input image if it is a right MLO view
                 if 'R_MLO' in file:
                     flip_nii_file(os.path.join(input_folder_pp, downsampled_file)) # flip the input image
 
@@ -98,10 +103,11 @@ class Inference:
                     flip_nii_file(output_file) 
                 
                 # upsample here
-                downsample_nii_file(nii_file = output_file,
-                                    downsample_factor = 0.1,
-                                    save_dir = output_folder_pp,
-                                    save_name = upsampled_file)
+                upsample_factor = self.files_shape_factor[upsampled_file]
+                upsample_nii_file(nii_file = output_file,
+                                  upsample_factor = upsample_factor,
+                                  save_dir = output_folder_pp,
+                                  save_name = upsampled_file)
                 
         print(f"Postprocessing completed. Postprocessed files saved to {output_folder_pp}.")
     
