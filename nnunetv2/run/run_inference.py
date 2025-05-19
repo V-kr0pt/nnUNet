@@ -66,7 +66,7 @@ class Inference:
             '--disable_tta',
             '-npp', '1'
         ]
-        #subprocess.run(command, check=True)
+        subprocess.run(command, check=True)
 
 
     def run_postprocessing(self):
@@ -83,7 +83,7 @@ class Inference:
             '-np', '8',
             '-plans_json', '/mnt/d/Users/UFPB/vitor/nn_unet/media/nnUNet_results/Dataset995_BreastPectoralSegmentation/nnUNetTrainer__nnUNetPlans__3d_fullres/crossval_results_folds_0_1_2_3_4/plans.json'
         ]
-        #subprocess.run(command, check=True)
+        subprocess.run(command, check=True)
 
         # Upsample and flip
         for file in os.listdir(self.output_folder):
