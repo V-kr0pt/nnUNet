@@ -116,7 +116,10 @@ class Inference:
         subprocess.run(command, check=True)
 
         # Upsample and flip
-        for file in os.listdir(self.output_folder):
+        all_files_output = os.listdir(self.output_folder)
+        all_files_len = len(all_files_output)
+        for i, file in enumerate(all_files_output):
+            print(f"Postprocessing file {i+1}/{all_files_len}: {file}")
             # Postprocess each file
             self.postprocess_file(file, output_folder_pp)    
                 
