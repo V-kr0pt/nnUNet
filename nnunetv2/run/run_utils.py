@@ -23,6 +23,7 @@ def upsample_nii_file(nii_file:str, upsample_factor:tuple, save_dir:str, save_na
     assert upsample_factor[0] > 1 and upsample_factor[1] > 1, "Factors must be greater than 1."
 
     upsampled_data = zoom(nii_data, upsample_factor, order=1)
+    upsampled_data = (upsampled_data > 0.5).astype(np.uint8)  # Being sure the data is binary
     
     upsampled_nii = nib.Nifti1Image(upsampled_data, nii.affine, nii.header)
     
