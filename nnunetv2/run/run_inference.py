@@ -77,8 +77,8 @@ class Inference:
         
         # Parallelize file processing
         for file in os.listdir(self.input_folder):
-                # Preprocess each file
-                self.preprocess_file(file, input_folder_pp)
+            # Preprocess each file
+            self.preprocess_file(file, input_folder_pp)
         
         self.input_folder = input_folder_pp # Update input_folder to the new preprocessed folder
         print(f"Preprocessing completed. Preprocessed files saved to {input_folder_pp}.")
