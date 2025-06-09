@@ -24,11 +24,9 @@ class CopyEqualizedDataset:
         nb_rows = self.df.shape[0]
         for index, row in self.df.iterrows():
             dummy_id = row['Dummy_ID']
-            birads_density = row['birads_density']
             subfolder_L = row['Subfolder_L']
             subfolder_R = row['Subfolder_R']
-            files = row['Files']
-            #origin_path = f'\\10.156.155.205\xpl\Users\barufalb\mccarthy\{dummy_id}\PROC_Tomo_RC\Subfolder'
+            
             origin_path_left = os.path.join('mnt', 'rede', f'{dummy_id}', 'PROC_Tomo_RC', subfolder_L)
             origin_path_right = os.path.join('mnt', 'rede', f'{dummy_id}', 'PROC_Tomo_RC', subfolder_R)
 
