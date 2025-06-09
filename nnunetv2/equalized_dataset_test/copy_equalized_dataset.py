@@ -26,9 +26,9 @@ class CopyEqualizedDataset:
             dummy_id = row['Dummy_ID']
             subfolder_L = row['Subfolder_L']
             subfolder_R = row['Subfolder_R']
-            
-            origin_path_left = os.path.join('mnt', 'rede', f'{dummy_id}', 'PROC_Tomo_RC', subfolder_L)
-            origin_path_right = os.path.join('mnt', 'rede', f'{dummy_id}', 'PROC_Tomo_RC', subfolder_R)
+
+            origin_path_left = f'/mnt/rede/{dummy_id}/PROC_Tomo_RC/{subfolder_L}'
+            origin_path_right= f'/mnt/rede/{dummy_id}/PROC_Tomo_RC/{subfolder_R}'
 
             # Command to copy the folder
             print(f"{index}/{nb_rows}", flush=True)
