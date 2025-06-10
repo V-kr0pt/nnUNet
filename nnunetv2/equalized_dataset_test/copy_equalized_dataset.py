@@ -24,7 +24,6 @@ class CopyEqualizedDataset:
         )
         self.logger = logging.getLogger(__name__)
 
-
         
     def run_copy(self):
         # Iterate through each row in the DataFrame
@@ -32,6 +31,7 @@ class CopyEqualizedDataset:
         
         # Convert DICOM to NIfTI
         self.stack_dicom_series()
+
     
     def copy_files(self):
         nb_rows = self.df.shape[0]
@@ -64,7 +64,6 @@ class CopyEqualizedDataset:
             
 
     def stack_dicom_series(self):
-        slices = []
         dicom_folders = os.listdir(self.destination_path)
         for folder in dicom_folders:
             input_folder = os.path.join(self.destination_path, folder)
@@ -104,10 +103,10 @@ class CopyEqualizedDataset:
                 print("No valid DICOM slices found in the folder.")
                 return
 
-        volume = np.stack(slices, axis=0)  # [Z, Y, X]
-        image = sitk.GetImageFromArray(volume)
-        sitk.WriteImage(image, output_file)
-        print(f"[OK] Volume salvo em {output_file}")
+            volume = np.stack(slices, axis=0)  # [Z, Y, X]
+            image = sitk.GetImageFromArray(volume)
+            sitk.WriteImage(image, output_file)
+            print(f"[OK] Saved NiFTI file: {output_file}")
 
 
 if __name__ == "__main__":
