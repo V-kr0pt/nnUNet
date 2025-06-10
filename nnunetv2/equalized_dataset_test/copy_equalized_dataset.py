@@ -8,9 +8,11 @@ import logging
 
 class CopyEqualizedDataset:
     def __init__(self):
+        # Load the CSV file containing the dataset information
         csv_path = os.path.join('nnunetv2','equalized_dataset_test','random_selected_MLO.csv')
         self.df = pd.read_csv(csv_path)
 
+        # determine the destination path for the copied files
         self.destination_path = os.path.join('..','media','input_equalized_dataset_test')
         os.makedirs(self.destination_path, exist_ok=True)
 
@@ -26,14 +28,19 @@ class CopyEqualizedDataset:
 
         
     def run_copy(self):
-        # Iterate through each row in the DataFrame
+        # Iterate through each row in the DataFrame to copy files
+        print("Starting to copy DICOM folders...")
         self.copy_files()
+        print("All DICOM folders copied successfully.")
         
         # Convert DICOM to NIfTI
+        print("Starting to convert DICOM to NIfTI...")
         self.stack_dicom_series()
+        print("All DICOM folders converted to NIfTI successfully.")
 
-    
+
     def copy_files(self):
+        # Iterate through each row in the DataFrame to copy files
         nb_rows = self.df.shape[0]
         for index, row in self.df.iterrows():
             dummy_id = str(row['Dummy_ID']).zfill(8)  # Ensure Dummy_ID is zero-padded to 8 digits
@@ -41,10 +48,19 @@ class CopyEqualizedDataset:
             subfolder_R = row['Subfolder_R']
             birads_density = row['birads_density']
 
+            # Construct the origin paths for left and right folders (the drive is mounted at /mnt/rede)
             origin_path_left = f'/mnt/rede/{dummy_id}/PROC_Tomo_RC/{subfolder_L}'
             origin_path_right= f'/mnt/rede/{dummy_id}/PROC_Tomo_RC/{subfolder_R}'
             print(f"{index}/{nb_rows}", flush=True)
-            # Command to copy the folder
+            
+            # Command to copy the left folder
+
+            # check if the left folder already exists 
+            left_destination = os.path.join(self.destination_path, subfolder_L)
+            if os.path.exists(left_destination):
+                print(f"[SKIP] Folder already exists: {left_destination}")
+                continue
+            # if not, copy the folder
             try:
                 command = f"cp -r {origin_path_left} {self.destination_path}"
                 # Execute the command
@@ -53,6 +69,16 @@ class CopyEqualizedDataset:
                 print(f"[ERROR] Failed to copy {subfolder_L}", flush=True)
                 self.logger.error(f"Failed to copy {subfolder_L} from {origin_path_left} - BIRADS: {birads_density}")
                 continue
+            
+            # Command to copy the right folder
+
+            # check if the right folder already exists
+            right_destination = os.path.join(self.destination_path, subfolder_R)
+            if os.path.exists(right_destination):
+                print(f"[SKIP] Folder already exists: {right_destination}")
+                continue
+
+            # if not, copy the folder
             try:
                 command = f"cp -r {origin_path_right} {self.destination_path}"
                 # Execute the command
