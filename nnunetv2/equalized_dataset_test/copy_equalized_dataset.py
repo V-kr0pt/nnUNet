@@ -36,7 +36,7 @@ class CopyEqualizedDataset:
     def copy_files(self):
         nb_rows = self.df.shape[0]
         for index, row in self.df.iterrows():
-            dummy_id = row['Dummy_ID']
+            dummy_id = str(row['Dummy_ID']).zfill(8)  # Ensure Dummy_ID is zero-padded to 8 digits
             subfolder_L = row['Subfolder_L']
             subfolder_R = row['Subfolder_R']
             birads_density = row['birads_density']
@@ -95,9 +95,11 @@ class CopyEqualizedDataset:
                 try:
                     ds = pydicom.dcmread(path)
                     slices.append(ds.pixel_array)
-                except:
-                    continue
-
+                except pydicom.errors.InvalidDicomError as e:
+                    print(f"[ERROR] Invalid DICOM file: {path}")
+                    self.logger.error(f"Invalid DICOM file: {path} - {e}")
+                    break
+            
             if len(slices) == 0:
                 print("No valid DICOM slices found in the folder.")
                 return
