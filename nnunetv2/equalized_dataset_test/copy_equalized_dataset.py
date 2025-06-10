@@ -124,7 +124,7 @@ class CopyEqualizedDataset:
                 except pydicom.errors.InvalidDicomError as e:
                     print(f"[ERROR] Invalid DICOM file: {path}")
                     self.logger.error(f"Invalid DICOM file: {path} - {e}")
-                    break
+                    continue
             
             if len(slices) == 0:
                 print("No valid DICOM slices found in the folder.")
