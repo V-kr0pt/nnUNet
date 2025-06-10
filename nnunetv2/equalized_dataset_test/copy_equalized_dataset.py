@@ -42,11 +42,12 @@ class CopyEqualizedDataset:
     def copy_files(self):
         # Iterate through each row in the DataFrame to copy files
         nb_rows = self.df.shape[0]
-        for index, row in self.df.iterrows():
-            dummy_id = str(row['Dummy_ID']).zfill(8)  # Ensure Dummy_ID is zero-padded to 8 digits
+        for index, row in self.df.iterrows(): 
             subfolder_L = row['Subfolder_L']
             subfolder_R = row['Subfolder_R']
             birads_density = row['birads_density']
+            # Extract Dummy_ID from Subfolder_L (sometimes its padded while the dummy_id column is not)
+            dummy_id = subfolder_L.split('_')[0] 
 
             # Construct the origin paths for left and right folders (the drive is mounted at /mnt/rede)
             origin_path_left = f'/mnt/rede/{dummy_id}/PROC_Tomo_RC/{subfolder_L}'
