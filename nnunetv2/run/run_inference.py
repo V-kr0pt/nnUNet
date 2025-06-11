@@ -4,11 +4,12 @@ from run_utils import downsample_nii_file, upsample_nii_file, flip_nii_file
 from post_processing import open_run_and_save_nifti_postprocess
 
 class Inference:
-    def __init__(self, input_folder, output_folder, skip_pre=False, skip_post=False):
+    def __init__(self, input_folder, output_folder, skip_pre=False, skip_post=False, restart_preprocess=False):
         self.input_folder = input_folder
         self.output_folder = output_folder
         self.skip_pre = skip_pre
         self.skip_post = skip_post
+        self.restart_preprocess = restart_preprocess
         self.downsample_factor = 10
         self.files_shape_factor = {}
 
@@ -68,20 +69,41 @@ class Inference:
         input_folder_pp = os.path.basename(self.input_folder) if os.path.basename(self.input_folder) else 'input'
         input_folder_pp += '_PP'
         input_folder_pp = os.path.join(self.input_folder, input_folder_pp)
-        # if the preprocessed folder already exists, remove it
-        if os.path.exists(input_folder_pp):
+        # if the preprocessed folder already exists and restart_preprocess was set, remove it
+        if os.path.exists(input_folder_pp) and self.restart_preprocess:
             subprocess.run(['rm', '-rf', input_folder_pp])
-        os.makedirs(input_folder_pp)
+            os.makedirs(input_folder_pp)
+        elif not os.path.exists(input_folder_pp):
+            print(f"Creating preprocessed folder: {input_folder_pp}")
+            os.makedirs(input_folder_pp)
+        else:
+            print(f"Preprocessed folder already exists: {input_folder_pp}. Use --restart_preprocess if you want to overwrite it.")
         
         print(f"Running preprocessing...\nInput: {self.input_folder}\nOutput: {input_folder_pp}")
         
-        # Parallelize file processing
-        for file in os.listdir(self.input_folder):
+        # TODO Parallelize file processing
+        all_files_input = os.listdir(self.input_folder)
+        all_files_input = [f for f in all_files_input if f.endswith('.nii.gz')]
+
+        already_done_files = [file for file in all_files_input if\
+                               os.path.exists(os.path.join(input_folder_pp,
+                                                           'downsampled_'+file.strip('.nii.gz')+'_0000.nii.gz')) ]
+
+        all_files_len = len(all_files_input) - len(already_done_files)
+        if not all_files_len:
+            print(f"No files to preprocess in {self.input_folder}.")
+            return
+
+        for i, file in enumerate(all_files_input):
+            print(f"\rPreprocessing file {i+1}/{all_files_len}: {file}", end='', flush=True)
+            if file in already_done_files:
+                print(f"\rSkipping file {i+1}/{all_files_len}: {file} as it already exists in {input_folder_pp}.", end='', flush=True) 
+                continue
             # Preprocess each file
             self.preprocess_file(file, input_folder_pp)
         
         self.input_folder = input_folder_pp # Update input_folder to the new preprocessed folder
-        print(f"Preprocessing completed. Preprocessed files saved to {input_folder_pp}.")
+        print(f"\nPreprocessing completed. Preprocessed files saved to {input_folder_pp}.")
 
     def run_inference(self):
         print(f"Running inference...\nInput: {self.input_folder}\nOutput: {self.output_folder}")
@@ -117,9 +139,10 @@ class Inference:
 
         # Upsample and flip
         all_files_output = os.listdir(self.output_folder)
+        all_files_output = [f for f in all_files_output if f.endswith('.nii.gz')]
         all_files_len = len(all_files_output)
         for i, file in enumerate(all_files_output):
-            print(f"Postprocessing file {i+1}/{all_files_len}: {file}")
+            print(f"\rPostprocessing file {i+1}/{all_files_len}: {file}", end='', flush=True)
             # Postprocess each file
             self.postprocess_file(file, output_folder_pp)    
                 
@@ -131,7 +154,7 @@ class Inference:
             self.run_preprocessing()
             
         # Run inference
-        self.run_inference()
+        #self.run_inference()
         
         if not self.skip_post:
             self.run_postprocessing()
@@ -147,9 +170,10 @@ if __name__ == "__main__":
     parser.add_argument('-i', '--input_folder', default=DEFAULT_INPUT_FOLDER, help='Path to the input folder')
     parser.add_argument('-o', '--output_folder', default=DEFAULT_OUTPUT_FOLDER, help='Path to the output folder')
     parser.add_argument('--skip_pre', action='store_true', help='Skip preprocessing before inference')
-    parser.add_argument('--skip_post', action='store_true', help='Skip postprocessing after inference')    
+    parser.add_argument('--skip_post', action='store_true', help='Skip postprocessing after inference')
+    parser.add_argument('--restart_preprocess', action='store_true', help='Restart preprocessing even if it was done before')    
     args = parser.parse_args()
     
 
-    inference = Inference(args.input_folder, args.output_folder, args.skip_pre, args.skip_post)
+    inference = Inference(args.input_folder, args.output_folder, args.skip_pre, args.skip_post, args.restart_preprocess)
     inference.run()
