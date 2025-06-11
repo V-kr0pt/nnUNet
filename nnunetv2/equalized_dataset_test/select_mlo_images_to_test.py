@@ -49,10 +49,10 @@ assert nb_dummy_ids_birads_3 >= 100, f'{nb_dummy_ids_birads_3} < 100 rows'
 assert nb_dummy_ids_birads_4 >= 100, f'{nb_dummy_ids_birads_4} < 100 rows'
 
 # random dummy_id
-selected_dummy_ids_birads_1 = np.random.randint(low=0, high=nb_dummy_ids_birads_1, size=100)
-selected_dummy_ids_birads_2 = np.random.randint(low=0, high=nb_dummy_ids_birads_2, size=100)
-selected_dummy_ids_birads_3 = np.random.randint(low=0, high=nb_dummy_ids_birads_3, size=100)
-selected_dummy_ids_birads_4 = np.random.randint(low=0, high=nb_dummy_ids_birads_4, size=100)
+selected_dummy_ids_birads_1 = np.random.choice(nb_dummy_ids_birads_1, size=100, replace=False)
+selected_dummy_ids_birads_2 = np.random.choice(nb_dummy_ids_birads_2, size=100, replace=False)
+selected_dummy_ids_birads_3 = np.random.choice(nb_dummy_ids_birads_3, size=100, replace=False)
+selected_dummy_ids_birads_4 = np.random.choice(nb_dummy_ids_birads_4, size=100, replace=False)
 
 # select dfs
 selected_df_birads_1 = merged_df_birads_1.iloc[selected_dummy_ids_birads_1]
