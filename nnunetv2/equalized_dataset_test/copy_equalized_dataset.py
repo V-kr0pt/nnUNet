@@ -52,7 +52,7 @@ class CopyEqualizedDataset:
             # Construct the origin paths for left and right folders (the drive is mounted at /mnt/rede)
             origin_path_left = f'/mnt/rede/{dummy_id}/PROC_Tomo_RC/{subfolder_L}'
             origin_path_right= f'/mnt/rede/{dummy_id}/PROC_Tomo_RC/{subfolder_R}'
-            print(f"{index}/{nb_rows}", flush=True)
+            print(f"\r{index}/{nb_rows}", end='', flush=True)
             
             # Command to copy the left folder
 
@@ -67,7 +67,7 @@ class CopyEqualizedDataset:
                 # Execute the command
                 subprocess.run(command, shell=True, check=True)    
             except subprocess.CalledProcessError as e:
-                print(f"[ERROR] Failed to copy {subfolder_L}", flush=True)
+                print(f"[ERROR] Failed to copy {subfolder_L}")
                 self.logger.error(f"Failed to copy {subfolder_L} from {origin_path_left} - BIRADS: {birads_density}")
                 continue
             
@@ -85,7 +85,7 @@ class CopyEqualizedDataset:
                 # Execute the command
                 subprocess.run(command, shell=True, check=True)
             except subprocess.CalledProcessError as e:
-                print(f"[ERROR] Failed to copy {subfolder_R}", flush=True)
+                print(f"[ERROR] Failed to copy {subfolder_R}")
                 self.logger.error(f"Failed to copy {subfolder_R} from {origin_path_right} - BIRADS: {birads_density}")
                 continue
             
