@@ -96,6 +96,11 @@ class CopyEqualizedDataset:
             input_folder = os.path.join(self.destination_path, folder)
             if not os.path.isdir(input_folder):
                 continue
+
+            # if the folder has the same name as the input folder, skip it (preprocessed folder)
+            if folder == os.path.basename(self.destination_path)+ '_PP':
+                print(f"[SKIP] Preprocessed folder: {input_folder}")
+                continue
             
             output_file = os.path.join(self.destination_path, f"{folder}.nii.gz")
             if os.path.exists(output_file):
