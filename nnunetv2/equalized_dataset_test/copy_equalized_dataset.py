@@ -121,24 +121,39 @@ class CopyEqualizedDataset:
             print(f"Reading DICOM files from {input_folder}")
             slices = []
             sorted_files = sorted(os.listdir(input_folder))
+            
             for fname in sorted_files:
                 path = os.path.join(input_folder, fname)
                 try:
-                    ds = pydicom.dcmread(path)
-                    slices.append(ds.pixel_array)
-                except pydicom.errors.InvalidDicomError as e:
-                    print(f"[ERROR] Invalid DICOM file: {path}")
-                    self.logger.error(f"Invalid DICOM file: {path} - {e}")
+                    ds = pydicom.dcmread(path) 
+                    # validate if the file has PixelData and only then try to extract pixel data
+                    if hasattr(ds, 'PixelData') and ds.PixelData is not None:
+                        try:
+                            pixel_array = ds.pixel_array
+                            slices.append(pixel_array)
+                        except Exception as e:
+                            print(f"[ERROR] Cannot extract pixel data from: {fname}")
+                            self.logger.error(f"Error extracting pixel data from {fname}: {str(e)}")
+                            continue
+                    else:
+                        print(f"[WARN] No pixel data in: {fname}")
+                        self.logger.warning(f"No pixel data in DICOM file: {path}")
+                
+                except Exception as e:
+                    print(f"[ERROR] Cannot read: {fname}")
+                    self.logger.error(f"Error reading DICOM file: {path}: {str(e)}")
                     continue
             
-            if len(slices) == 0:
-                print("No valid DICOM slices found in the folder.")
-                return
+            if not slices:
+                print(f"[ERROR] No valid DICOM slices found in folder: {input_folder}")
+                self.logger.error(f"No valid DICOM slices found in folder: {input_folder}")
+                continue
+
 
             volume = np.stack(slices, axis=0)  # [Z, Y, X]
             image = sitk.GetImageFromArray(volume)
             sitk.WriteImage(image, output_file)
-            print(f"[OK] Saved NiFTI file: {output_file}")
+            print(f"[OK] Saved NiFTI file: {output_file}")    
 
 
 if __name__ == "__main__":
