@@ -69,6 +69,7 @@ class Inference:
         input_folder_pp = os.path.basename(self.input_folder) if os.path.basename(self.input_folder) else 'input'
         input_folder_pp += '_PP'
         input_folder_pp = os.path.join(self.input_folder, input_folder_pp)
+
         # if the preprocessed folder already exists and restart_preprocess was set, remove it
         if os.path.exists(input_folder_pp) and self.restart_preprocess:
             subprocess.run(['rm', '-rf', input_folder_pp])
@@ -90,10 +91,25 @@ class Inference:
                                                            'downsampled_'+file.strip('.nii.gz')+'_0000.nii.gz')) ]
 
         all_files_len = len(all_files_input) - len(already_done_files)
+        
         if not all_files_len:
             print(f"No files to preprocess in {self.input_folder}.")
-            self.input_folder = input_folder_pp  # Update input_folder to the new preprocessed folder
-            return
+            # Open the files_shape_factor file if it exists
+            try:
+                with open(os.path.join(input_folder_pp, 'files_shape_factor.txt'), 'r') as f:
+                    for line in f:
+                        key, value = line.strip().split(': ')
+                        self.files_shape_factor[key] = eval(value)
+                self.input_folder = input_folder_pp  # Update input_folder to the new preprocessed folder
+                return
+            except FileNotFoundError:
+                # If the file does not exist, prompt the user to rerun with --restart_preprocess
+                print(f"[ERROR] No files_shape_factor.txt found in {input_folder_pp}.")
+                input("Do you want to rerun with --restart_preprocess? Press Enter to continue or Ctrl+C to exit.")
+                self.restart_preprocess = True
+                self.rerun = True
+                self.run_preprocessing()
+
 
         for i, file in enumerate(all_files_input):
             print(f"\rPreprocessing file {i+1}/{all_files_len}: {file}", end='', flush=True)
@@ -102,6 +118,11 @@ class Inference:
                 continue
             # Preprocess each file
             self.preprocess_file(file, input_folder_pp)
+        
+        # save the files_shape_factor to a file
+        with open(os.path.join(input_folder_pp, 'files_shape_factor.txt'), 'w') as f:
+            for key, value in self.files_shape_factor.items():
+                f.write(f"{key}: {value}\n")
         
         self.input_folder = input_folder_pp # Update input_folder to the new preprocessed folder
         print(f"\nPreprocessing completed. Preprocessed files saved to {input_folder_pp}.")
@@ -142,6 +163,7 @@ class Inference:
         all_files_output = os.listdir(self.output_folder)
         all_files_output = [f for f in all_files_output if f.endswith('.nii.gz')]
         all_files_len = len(all_files_output)
+        print('...')
         for i, file in enumerate(all_files_output):
             print(f"\rPostprocessing file {i+1}/{all_files_len}: {file}", end='', flush=True)
             # Postprocess each file
