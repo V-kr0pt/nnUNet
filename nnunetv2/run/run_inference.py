@@ -92,6 +92,7 @@ class Inference:
         all_files_len = len(all_files_input) - len(already_done_files)
         if not all_files_len:
             print(f"No files to preprocess in {self.input_folder}.")
+            self.input_folder = input_folder_pp  # Update input_folder to the new preprocessed folder
             return
 
         for i, file in enumerate(all_files_input):
@@ -154,7 +155,7 @@ class Inference:
             self.run_preprocessing()
             
         # Run inference
-        #self.run_inference()
+        self.run_inference()
         
         if not self.skip_post:
             self.run_postprocessing()
