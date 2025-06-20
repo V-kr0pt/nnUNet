@@ -9,6 +9,14 @@ from run_utils import open_nifti_image
 
 
 def keep_largest_component(mask):
+    '''
+    Keep the largest connected component in a binary mask.
+    Args:
+        mask (np.ndarray): The input binary mask.
+    Returns:
+        np.ndarray: The binary mask with only the largest connected component retained.
+    '''
+
     labels = measure.label(mask)
     props = measure.regionprops(labels)
     if not props:
@@ -18,11 +26,26 @@ def keep_largest_component(mask):
 
 
 def morphological_closing(mask, kernel_size=15):
+    '''
+    Apply morphological closing to a binary mask.
+    Args:
+        mask (np.ndarray): The input binary mask.
+        kernel_size (int): The size of the structuring element for morphological operations.
+    Returns:
+        np.ndarray: The binary mask after applying morphological closing.
+    '''
+
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (kernel_size, kernel_size))
     closed = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
     return closed.astype(np.uint8)
 
 def smooth_segmentation_volume(volume):
+    '''
+    Smooth a 3D binary segmentation volume using Gaussian filtering.
+    Args:
+        volume (np.ndarray): The input 3D binary segmentation volume.
+    Returns:
+        np.ndarray: The smoothed binary segmentation volume.'''
     smothed = gaussian_filter(volume.astype(np.float32), sigma=1, radius=[10,10,5]) > 0.5
     return smothed.astype(np.uint8)
 
@@ -107,6 +130,13 @@ def l_rool(mask):
 
 
 def contour_smoothing(mask):
+    '''
+    Smooth the contours of a binary mask using the Douglas-Peucker algorithm.
+    Args:
+        mask (np.ndarray): The input binary mask.
+    Returns:
+        np.ndarray: The binary mask with smoothed contours.
+    '''
     mask = np.ascontiguousarray(mask.astype(np.uint8))
 
     # Find all contours in the mask
@@ -129,6 +159,17 @@ def contour_smoothing(mask):
     return smoothed_mask
 
 def postprocess_mask(mask):
+    '''
+    Postprocess a binary mask by applying morphological operations.
+    This function processes each slice of the 3D mask independently, keeping the largest connected component,
+    applying morphological closing, and performing L-rool operation. It also identifies the mask's quadrant to apply the L-rool operation correctly.
+    The mask is expected to be a 3D numpy array where each slice is a 2D binary mask.
+    Args:
+        mask (np.ndarray): The input binary mask.
+    Returns:
+        np.ndarray: The postprocessed binary mask.
+    '''
+
     print("Postprocessing mask...")
     total_slices = mask.shape[2]
     for slice_idx in range(total_slices):
@@ -146,6 +187,17 @@ def postprocess_mask(mask):
     return mask
 
 def open_run_and_save_nifti_postprocess(nii_img_name, nii_img_path, save_dir, save_name):
+    '''
+    Open a NIfTI image, postprocess the mask, and save it to the specified directory.
+    Args:
+        nii_img_name (str): The name of the NIfTI image file.
+        nii_img_path (str): The path to the directory containing the NIfTI image.
+        save_dir (str): The directory where the postprocessed mask will be saved.
+        save_name (str): The name for the saved postprocessed mask file.
+    Returns:
+        None
+    '''
+
     mask = open_nifti_image(nii_img_name=nii_img_name, nii_img_path=nii_img_path)
     mask = postprocess_mask(mask)
     mask = mask.astype(np.uint8)
