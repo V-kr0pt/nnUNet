@@ -26,7 +26,62 @@ def smooth_segmentation_volume(volume):
     smothed = gaussian_filter(volume.astype(np.float32), sigma=1, radius=[10,10,5]) > 0.5
     return smothed.astype(np.uint8)
 
+def identify_mask_quadrant(mask):
+    '''
+    Identify the dominant quadrant of a binary mask.
+    Args:
+        mask (np.ndarray): The input binary mask.
+    Returns:
+        str: The name of the dominant quadrant ('top_left', 'top_right', 'bottom_left', 'bottom_right')
+    '''
+
+    rows, cols = mask.shape
+    quadrants = {
+        'top_left': mask[:rows//2, :cols//2],
+        'top_right': mask[:rows//2, cols//2:],
+        'bottom_left': mask[rows//2:, :cols//2],
+        'bottom_right': mask[rows//2:, cols//2:]
+    }
+    count = {name: np.sum(q) for name, q in quadrants.items()}
+    dominant_quadrant = max(count, key=count.get)
+    
+    return dominant_quadrant
+
+def mask_to_3_quadrant(mask, original_quadrant):
+    '''Convert a mask to a 3-quadrant representation based on the original quadrant. 
+        If the mask is already converted it will return to the original quadrant.
+    Args:
+        mask (np.ndarray): The input mask to be converted.
+        original_quadrant (str): The original quadrant of the mask ('top_left', 'top_right', 'bottom_left', 'bottom_right').
+    Returns:
+        np.ndarray: The converted mask in the 3-quadrant representation.
+    '''
+    new_mask = np.zeros_like(mask, dtype=np.uint8)
+    if original_quadrant == 'top_left':
+        # Flip horizontally
+        new_mask = np.flip(mask, axis=1)  
+    elif original_quadrant == 'top_right':
+        # Flip vertically and horizontally
+        new_mask = np.flip(mask, axis=0)
+        new_mask = np.flip(new_mask, axis=1) 
+    elif original_quadrant == 'bottom_left':
+        # Doing nothing
+        new_mask = mask.copy()    
+    elif original_quadrant == 'bottom_right':
+        # Flip vertically
+        new_mask = np.flip(mask, axis=0)
+
+    return new_mask
+        
+
 def l_rool(mask):
+    '''Perform a L-rool operation on the mask.
+    Args:
+        mask (np.ndarray): The input binary mask.
+    Returns:
+        np.ndarray: The mask after L-rool operation.
+    '''
+
     rows, cols = mask.shape
     queue = deque()
     
@@ -74,12 +129,18 @@ def contour_smoothing(mask):
     return smoothed_mask
 
 def postprocess_mask(mask):
+    print("Postprocessing mask...")
     total_slices = mask.shape[2]
     for slice_idx in range(total_slices):
         mask[:, :, slice_idx] = keep_largest_component(mask[:, :, slice_idx])
         mask[:, :, slice_idx] = morphological_closing(mask[:, :, slice_idx])
+
+        # Identify the mask's quadrant to use l-rool and after reconvert to the original quadrant
+        original_quadrant = identify_mask_quadrant(mask[:, :, slice_idx])
+        mask[:, :, slice_idx] = mask_to_3_quadrant(mask[:, :, slice_idx], original_quadrant)
         mask[:, :, slice_idx] = l_rool(mask[:, :, slice_idx])
-        #mask[:, :, slice_idx] = contour_smoothing(mask[:, :, slice_idx])
+        mask[:, :, slice_idx] = mask_to_3_quadrant(mask[:, :, slice_idx], original_quadrant)
+            
         print(f"Processing slice {slice_idx + 1}/{total_slices}", end='\r')
     
     return mask
@@ -95,12 +156,11 @@ def open_run_and_save_nifti_postprocess(nii_img_name, nii_img_path, save_dir, sa
     
 
 if __name__ == '__main__':
-    
-    #nii_img_name = '4186065_PROC_R_MLO_20120831162844'
-    nii_img_name = '01483046_PROC_R_MLO_20220918204538'
-    #nii_img_name = '3971372_PROC_L_MLO_20120726155832'
 
-    mask = open_nifti_image(nii_img_name=nii_img_name, nii_img_path='output')
+    #nii_img_name = 'downsampled_09759995_PROC_L_MLO_20230910220321.nii.gz'
+    nii_img_name = 'downsampled_08056979_PROC_L_MLO_20230805161749.nii.gz'
+    path = '/home/kr0pt/Documents/tcc_project/codes/nn_unet/media/output'
+    mask = open_nifti_image(nii_img_name=nii_img_name, nii_img_path=path)
 
     print('Image: ', nii_img_name)
     print(f"Mask shape: {mask.shape}")
