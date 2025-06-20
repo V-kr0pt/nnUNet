@@ -37,8 +37,8 @@ class Inference:
             self.files_shape_factor[file] = (1 / real_factor[0], 1 / real_factor[1], real_factor[2])
             
             # Flip se for uma imagem R_MLO
-            if 'R_MLO' in file:
-                flip_nii_file(os.path.join(input_folder_pp, downsampled_file))
+            #if 'R_MLO' in file:
+            #    flip_nii_file(os.path.join(input_folder_pp, downsampled_file))
 
     def postprocess_file(self, file, output_folder_pp):
         if file.endswith('.nii.gz'):
@@ -54,8 +54,8 @@ class Inference:
             
             output_file = os.path.join(output_folder_pp, upsampled_file)
             # flip the output image
-            if 'R_MLO' in file:
-                flip_nii_file(output_file) 
+            #if 'R_MLO' in file:
+            #    flip_nii_file(output_file) 
             
             # upsample here
             upsample_factor = self.files_shape_factor[upsampled_file]
