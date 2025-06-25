@@ -97,7 +97,7 @@ def mask_to_3_quadrant(mask, original_quadrant):
     return new_mask
         
 
-def l_rool(mask):
+def l_rool(slice):
     '''Perform a L-rool operation on the mask.
     Args:
         mask (np.ndarray): The input binary mask.
@@ -105,28 +105,28 @@ def l_rool(mask):
         np.ndarray: The mask after L-rool operation.
     '''
 
-    rows, cols = mask.shape
+    rows, cols = slice.shape
     queue = deque()
     
     # Initialize queue with all active pixels
     for i in range(rows):
         for j in range(cols):
-            if mask[i, j] == 1:
+            if slice[i, j] == 1:
                 queue.append((i, j))
     while queue:
         i, j = queue.popleft()
         
-        # Check neighbor above (i-1, j)
-        if i > 0 and mask[i-1, j] == 0:
-            mask[i-1, j] = 1
-            queue.append((i-1, j))
+        # Check neighbor bellow (i+1, j)
+        if i < rows - 1 and slice[i + 1, j] == 0:
+            slice[i+1, j] = 1
+            queue.append((i+1, j))
         
         # Check neighbor to the right (i, j+1)
-        if j < cols - 1 and mask[i, j+1] == 0:
-            mask[i, j+1] = 1
-            queue.append((i, j+1))
+        if j > 0 and slice[i, j - 1] == 0:
+            slice[i,j-1] = 1
+            queue.append((i, j-1))
     
-    return mask.astype(np.uint8)
+    return slice.astype(np.uint8)
 
 
 def contour_smoothing(mask):
@@ -172,19 +172,26 @@ def postprocess_mask(mask):
 
     print("Postprocessing mask...")
     total_slices = mask.shape[2]
+    # flip columns to match the expected orientation
+    #mask = mask.transpose(1, 0, 2)
+    new_mask = np.zeros_like(mask, dtype=np.uint8)
     for slice_idx in range(total_slices):
-        mask[:, :, slice_idx] = keep_largest_component(mask[:, :, slice_idx])
-        mask[:, :, slice_idx] = morphological_closing(mask[:, :, slice_idx])
+        slice_mask = mask[:, :, slice_idx]
+        slice_mask = keep_largest_component(slice_mask)
+        slice_mask = morphological_closing(slice_mask)
 
         # Identify the mask's quadrant to use l-rool and after reconvert to the original quadrant
-        original_quadrant = identify_mask_quadrant(mask[:, :, slice_idx])
-        mask[:, :, slice_idx] = mask_to_3_quadrant(mask[:, :, slice_idx], original_quadrant)
-        mask[:, :, slice_idx] = l_rool(mask[:, :, slice_idx])
-        mask[:, :, slice_idx] = mask_to_3_quadrant(mask[:, :, slice_idx], original_quadrant)
-            
+        #original_quadrant = identify_mask_quadrant(slice_mask)
+        #slice_mask = mask_to_3_quadrant(slice_mask, original_quadrant)
+        #slice_mask = l_rool(slice_mask)
+        #slice_mask = mask_to_3_quadrant(slice_mask, original_quadrant)
+        
+        # save the processed slice back to the copy_mask
+        new_mask[:, :, slice_idx] = slice_mask
+
         print(f"Processing slice {slice_idx + 1}/{total_slices}", end='\r')
-    
-    return mask
+    #mask = mask.transpose(0, 1, 2)
+    return new_mask
 
 def open_run_and_save_nifti_postprocess(nii_img_name, nii_img_path, save_dir, save_name):
     '''
@@ -199,32 +206,21 @@ def open_run_and_save_nifti_postprocess(nii_img_name, nii_img_path, save_dir, sa
     '''
 
     mask = open_nifti_image(nii_img_name=nii_img_name, nii_img_path=nii_img_path)
-    mask = postprocess_mask(mask)
     mask = mask.astype(np.uint8)
-    nifti_img = nib.Nifti1Image(mask, affine=np.eye(4))
+    new_mask = postprocess_mask(mask)
+    new_mask = new_mask.astype(np.uint8)
+    nifti_img = nib.Nifti1Image(new_mask, affine=np.eye(4))
     save_path = os.path.join(save_dir, save_name)
     nib.save(nifti_img, save_path)
 
-    
 
 if __name__ == '__main__':
 
-    #nii_img_name = 'downsampled_09759995_PROC_L_MLO_20230910220321.nii.gz'
-    nii_img_name = 'downsampled_08056979_PROC_L_MLO_20230805161749.nii.gz'
-    path = '/home/kr0pt/Documents/tcc_project/codes/nn_unet/media/output'
-    mask = open_nifti_image(nii_img_name=nii_img_name, nii_img_path=path)
-
+    #nii_img_name = 'downsampled_06618305_PROC_R_MLO_20230421152905.nii.gz'
+    nii_img_name = 'downsampled_09759995_PROC_L_MLO_20230910220321.nii.gz'
+    path = '/home/kr0pt/Documents/tcc_project/codes/nn_unet/media/output_equalized_dataset_test/'
+    
+    nii_img_name = nii_img_name
+    
     print('Image: ', nii_img_name)
-    print(f"Mask shape: {mask.shape}")
-
-    mask = postprocess_mask(mask)
-
-    mask = mask.astype(np.uint8)
-    nifti_img = nib.Nifti1Image(mask, affine=np.eye(4))
-
-    output_postprocessed_folder = os.path.join('output', 'postprocessed')
-    if not os.path.exists(output_postprocessed_folder):
-        os.makedirs(output_postprocessed_folder)
-    nifti_file_path = os.path.join(output_postprocessed_folder,f'{nii_img_name}_slice_wise.nii.gz')
-    nib.save(nifti_img, nifti_file_path)
-    print(f"Postprocessed mask saved at {nifti_file_path}")
+    open_run_and_save_nifti_postprocess(nii_img_name=nii_img_name, nii_img_path=path, save_dir=path+'postprocessed', save_name=f'{nii_img_name}')
