@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+from matplotlib.widgets import Button
 import nibabel as nib
 import numpy as np
 import os
@@ -29,18 +30,37 @@ def plot_image_and_mask(image, mask):
 
     slices_to_show = decide_slices_to_show(mask, num_slices=15)
 
-    _, ax = plt.subplots(3, 5, figsize=(12, 8))
+    fig, ax = plt.subplots(3, 5, figsize=(12, 8))
     ax = ax.flatten()  # make it easier to iterate over the axes
 
+    img_displays = []    
+    mask_displays = []
     for i, slice_number in enumerate(slices_to_show):
         slice_image = image[:, :, slice_number] 
         slice_mask = mask[:, :, slice_number]
         
-        ax[i].imshow(slice_image, cmap='gray')
-        ax[i].imshow(slice_mask, alpha=0.3, cmap='jet')        
+        img_display = ax[i].imshow(slice_image, cmap='gray')
+        mask_display = ax[i].imshow(slice_mask, alpha=0.3, cmap='jet')
+
+        img_displays.append(img_display)
+        mask_displays.append(mask_display)
+     
         ax[i].set_title(f'Slice {slice_number}')
         ax[i].axis('off')
-        
+    
+    ax_button = plt.axes([0.4, 0.01, 0.2, 0.05])  # Position of the button
+    button = Button(ax_button, 'Toggle Mask')
+
+    def toggle_mask(event):
+        for mask_display in mask_displays:
+            if mask_display.get_alpha() > 0:
+                mask_display.set_alpha(0)  # Hide the mask
+            else:
+                mask_display.set_alpha(0.3)  # Show the mask
+        fig.canvas.draw_idle()
+
+    button.on_clicked(toggle_mask)
+
     #plt.tight_layout()  # Adjust spacing between subplots
     #manager = plt.get_current_fig_manager()
     #manager.full_screen_toggle()  
