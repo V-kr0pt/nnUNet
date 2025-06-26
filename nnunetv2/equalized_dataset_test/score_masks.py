@@ -66,8 +66,18 @@ def plot_image_and_mask(image, mask):
     #manager.full_screen_toggle()  
     
     plt.show()
+
     # ask the user to score the segmentation
-    user_score = float(input('Please score the segmentation from 0 to 10: '))
+    while True:
+        try:
+            user_score = float(input('Please score the segmentation from 0 to 10: '))
+            if 0 <= user_score <= 10:
+                break
+            else:
+                print("Score must be between 0 and 10. Please try again.")
+        except:
+            print("Invalid input. Please enter a number between 0 and 10.")
+        
     return user_score  
     
 
