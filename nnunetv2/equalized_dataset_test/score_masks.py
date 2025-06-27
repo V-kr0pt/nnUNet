@@ -132,11 +132,13 @@ if __name__ == '__main__':
     # remove the images already scored
     images_to_be_scored = [image for image in output_images if image not in scored_images]
 
+
+    # IT WAS RECOMMED TO REMOVE THE RANDOM SHUFFLE
     # randomly shuffle the images to be scored by user
     # maybe one user will not validate all the images 
-    name_number = np.sum([ord(char) for char in user])
-    np.random.seed(name_number)  # For reproducibility based on user name
-    np.random.shuffle(images_to_be_scored)
+    #name_number = np.sum([ord(char) for char in user])
+    #np.random.seed(name_number)  # For reproducibility based on user name
+    #np.random.shuffle(images_to_be_scored)
 
     print(f'There are {len(images_to_be_scored)} from a total of {len(output_images)} images to be scored!')
 
