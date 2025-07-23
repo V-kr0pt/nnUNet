@@ -89,18 +89,30 @@ def list_all_nii_files_in_folder(path: str):
     nii_files = [f.split('.')[0] for f in os.listdir(path) if f.endswith('.nii.gz')]
     return nii_files
 
-def update_images_to_be_scored(output_path, score_path):
+def update_images_to_be_scored(output_path, score_path, user, min_scores=3):
     output_images = list_all_nii_files_in_folder(output_path)
     assert len(output_images) > 0, "No output images found in the specified folder"
+
+    image_user_count = {img: set() for img in output_images}
 
     if os.path.isfile(score_path):
         with open(score_path, mode='r') as file:
             reader = csv.reader(file)
-            scored_images = [row[0] for row in reader if row]
-    else:
-        scored_images = []
+            for i, row in enumerate(reader):
+                if i == 0: # Skip header row
+                    continue
+                img = row[0]
+                usr = row[2] # user who scored the image
+                if img in image_user_count:
+                    image_user_count[img].add(usr)
 
-    images_to_be_scored = [image for image in output_images if image not in scored_images]
+    # Only include images with less than min_scores scores
+    # and not scored by the current user
+    images_to_be_scored = [
+        img for img, users in image_user_count.items() 
+        if len(users) < min_scores and (user not in users)
+    ]
+
     return images_to_be_scored
 
 def decide_slices_to_show(mask, num_slices=15):
@@ -245,7 +257,7 @@ def main():
     score_path = os.path.join(current_path, 'scores', f'all_scores.csv')
     
     # Get images to be scored
-    images_to_be_scored = update_images_to_be_scored(output_path, score_path)
+    images_to_be_scored = update_images_to_be_scored(output_path, score_path, user)
     print(f'There are {len(images_to_be_scored)} from a total of {len(output_images)} images to be scored!')
     
     if len(images_to_be_scored) == 0:
