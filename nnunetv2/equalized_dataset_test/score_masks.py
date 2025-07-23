@@ -210,7 +210,7 @@ class ImageViewer:
         
         return self.current_score
 
-def evaluate_mask(mask, image, image_name, score_path):
+def evaluate_mask(mask, image, image_name, score_path, user='unknown'):
     viewer = ImageViewer()
     user_score = viewer.plot_image_and_mask(image, mask)
     
@@ -219,8 +219,8 @@ def evaluate_mask(mask, image, image_name, score_path):
     with open(score_path, mode='a', newline='') as file:
         writer = csv.writer(file)
         if not file_exists:
-            writer.writerow(['image_name', 'score'])
-        writer.writerow([image_name, user_score])
+            writer.writerow(['image_name', 'score', 'user'])
+        writer.writerow([image_name, user_score, user])
     
     return user_score
 
@@ -242,7 +242,7 @@ def main():
         exit(1)
     
     current_path = os.path.dirname(os.path.abspath(__file__))
-    score_path = os.path.join(current_path, f'{user}_scores.csv')
+    score_path = os.path.join(current_path, 'scores', f'all_scores.csv')
     
     # Get images to be scored
     images_to_be_scored = update_images_to_be_scored(output_path, score_path)
@@ -276,7 +276,7 @@ def main():
         print(f'Image has {image.shape[-1]} slices. Analyze the segmentation and score from 0 to 10.')
         
         # Evaluate mask
-        score = evaluate_mask(mask, image, image_name, score_path)
+        score = evaluate_mask(mask, image, image_name, score_path, user)
         print(f'Score recorded: {score}')
         
         # Clean up cache periodically to save memory
@@ -286,10 +286,10 @@ def main():
         
         # Progress update
         if (i + 1) % 10 == 0:
-            print(f'\n🎉 Congratulations!! You scored {i+1} images! Thank you for your contribution! 🎉')
+            print(f'\n Congratulations!! You scored {i+1} images! Thank you for your contribution! ')
             print('Keep going!')
     
-    print(f'\n🎉🎉 Congratulations!! You scored all {len(images_to_be_scored)} images! You are awesome! 🎉🎉')
+    print(f'\n Congratulations!! You scored all {len(images_to_be_scored)} images! You are awesome! ')
 
 if __name__ == '__main__':
     main()
