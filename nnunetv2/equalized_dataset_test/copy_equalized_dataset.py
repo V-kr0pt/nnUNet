@@ -120,7 +120,11 @@ class CopyEqualizedDataset:
             # Read DICOM files and stack them
             print(f"Reading DICOM files from {input_folder}")
             slices = []
-            sorted_files = sorted(os.listdir(input_folder))
+            # Sort files to maintain the correct order
+            # obtain the number of the files in the folder
+            nb_and_file_dict = {int(f.split(".")[0].strip("image")): f for f in os.listdir(input_folder) if f.endswith('.dcm')}
+            # obtain the list of files sorted by their number
+            sorted_files = sorted(nb_and_file_dict.values(), key=lambda x: int(x.split('.')[0].strip('image')))
             
             for fname in sorted_files:
                 path = os.path.join(input_folder, fname)
@@ -158,5 +162,6 @@ class CopyEqualizedDataset:
 
 if __name__ == "__main__":
     copier = CopyEqualizedDataset()
-    copier.run_copy()
+    #copier.run_copy()
+    copier.stack_dicom_series()
     print("All files copied and converted to NIfTI format successfully.")
