@@ -162,6 +162,6 @@ class CopyEqualizedDataset:
 
 if __name__ == "__main__":
     copier = CopyEqualizedDataset()
-    #copier.run_copy()
-    copier.stack_dicom_series()
+    copier.run_copy()
+    #copier.stack_dicom_series()
     print("All files copied and converted to NIfTI format successfully.")
