@@ -164,7 +164,7 @@ def export_onnx_model(
                             "normalization_schemes": config.normalization_schemes,
                             # These are mostly interesting for certification
                             # uses, but they are also useful for debugging.
-                            "UNet_class_name": config.UNet_class_name,
+                            "UNet_class_name": config.unet_class_name,
                             "UNet_base_num_features": config.UNet_base_num_features,
                             "unet_max_num_features": config.unet_max_num_features,
                             "conv_kernel_sizes": config.conv_kernel_sizes,
