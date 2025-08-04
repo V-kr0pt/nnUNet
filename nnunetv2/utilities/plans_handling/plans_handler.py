@@ -40,7 +40,6 @@ class ConfigurationManager(object):
                           "or update your implementation + plans.")
             # try to build the architecture information from old plans, modify configuration dict to match new standard
             unet_class_name = self.configuration["UNet_class_name"]
-            self.unet_class_name = unet_class_name
             if unet_class_name == "PlainConvUNet":
                 network_class_name = "dynamic_network_architectures.architectures.unet.PlainConvUNet"
             elif unet_class_name == 'ResidualEncoderUNet':
