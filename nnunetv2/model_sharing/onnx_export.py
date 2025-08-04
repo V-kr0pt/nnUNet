@@ -164,12 +164,12 @@ def export_onnx_model(
                             "normalization_schemes": config.normalization_schemes,
                             # These are mostly interesting for certification
                             # uses, but they are also useful for debugging.
-                            "UNet_class_name": config.unet_class_name,
-                            "UNet_base_num_features": config.UNet_base_num_features,
-                            "unet_max_num_features": config.unet_max_num_features,
-                            "conv_kernel_sizes": config.conv_kernel_sizes,
-                            "pool_op_kernel_sizes": config.pool_op_kernel_sizes,
-                            "num_pool_per_axis": config.num_pool_per_axis,
+                            "UNet_class_name": config.configuration['architecture']['network_class_name'],
+                            "UNet_base_num_features": config.configuration['architecture']['arch_kwargs']['features_per_stage'][0],
+                            "unet_max_num_features": max(config.configuration['architecture']['arch_kwargs']['features_per_stage']),
+                            "conv_kernel_sizes": config.configuration['architecture']['arch_kwargs']['kernel_sizes'],
+                            "pool_op_kernel_sizes": config.configuration['architecture']['arch_kwargs']['strides'],
+                            "num_pool_per_axis": len(config.configuration['architecture']['arch_kwargs']['strides']),
                         },
                         "dataset_parameters": {
                             "dataset_name": dataset_name,
