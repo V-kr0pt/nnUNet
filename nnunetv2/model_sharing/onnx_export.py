@@ -64,7 +64,7 @@ def export_onnx_model(
                 continue
 
         predictor = nnUNetPredictor(
-            perform_everything_on_gpu=False,
+            perform_everything_on_device=False,
             device=torch.device("cpu"),
         )
 
