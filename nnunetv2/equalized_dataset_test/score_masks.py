@@ -223,16 +223,25 @@ class ImageViewer:
         return self.current_score
 
 def evaluate_mask(mask, image, image_name, score_path, user='unknown'):
+    if user == 'unknown':
+        user = input('Please enter your name: ').strip().lower()
+        if not user:
+            print("Username cannot be empty. Exiting.")
+            exit(1)
+    
+    def clean_text(s):
+        return str(s).encode('utf-8', 'ignore').decode('utf-8')
+    
     viewer = ImageViewer()
     user_score = viewer.plot_image_and_mask(image, mask)
     
     file_exists = os.path.isfile(score_path)
     
-    with open(score_path, mode='a', newline='') as file:
+    with open(score_path, mode='a', newline='', encoding='utf-8') as file:
         writer = csv.writer(file)
         if not file_exists:
             writer.writerow(['image_name', 'score', 'user'])
-        writer.writerow([image_name, user_score, user])
+        writer.writerow([clean_text(image_name), user_score, clean_text(user)])
     
     return user_score
 
