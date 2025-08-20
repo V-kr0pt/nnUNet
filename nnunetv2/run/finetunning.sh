@@ -1,15 +1,41 @@
 #!/bin/bash
+set -euo pipefail
+
+FINETUNE_DS="Dataset996_BreastPectoralSegmentation_finetunning"
+PREV_DS="Dataset995_BreastPectoralSegmentation"
+CONFIG="3d_fullres"
+LOG_DIR="logs_finetune_996"
+mkdir -p "$LOG_DIR"
 
 for FOLD in 0 1 2 3 4; do
-    echo "==============================================="
-    echo "Starting training for fold $FOLD"
-    echo "Finetuning dataset: Dataset996_BreastPectoralSegmentation_finetunning"
-    echo "Pretrained weights: nnUNet_results/Dataset995_BreastPectoralSegmentation/nnUNetTrainer__nnUNetPlans__3d_fullres/fold_$FOLD/checkpoint_best.pth"
-    echo "==============================================="
+    CKPT="$nnUNet_results/$PREV_DS/nnUNetTrainer__nnUNetPlans__${CONFIG}/fold_${FOLD}/checkpoint_best.pth"
 
-    nnUNetv2_train Dataset996_BreastPectoralSegmentation_finetunning 3d_fullres $FOLD \
-        -pretrained_weights nnUNet_results/Dataset995_BreastPectoralSegmentation/nnUNetTrainer__nnUNetPlans__3d_fullres/fold_$FOLD/checkpoint_best.pth
+    echo "============================================================"
+    echo "Starting training for fold ${FOLD}"
+    echo "Finetuning dataset : $FINETUNE_DS"
+    echo "Configuration      : $CONFIG"
+    echo "Pretrained weights : $CKPT"
+    echo "Results will go to : $nnUNet_results/$FINETUNE_DS/nnUNetTrainer__nnUNetPlans__${CONFIG}/fold_${FOLD}"
+    echo "Log file           : $LOG_DIR/fold_${FOLD}.log"
+    echo "============================================================"
 
-    echo "Training finished for fold $FOLD :)"
-    echo ""
+    if [ ! -f "$CKPT" ]; then
+        echo "WARNING: $CKPT not found. Trying checkpoint_final.pth ..."
+        CKPT_ALT="$nnUNet_results/$PREV_DS/nnUNetTrainer__nnUNetPlans__${CONFIG}/fold_${FOLD}/checkpoint_final.pth"
+        if [ -f "$CKPT_ALT" ]; then
+            CKPT="$CKPT_ALT"
+            echo "Using: $CKPT"
+        else
+            echo "ERROR: No pretrained checkpoint found for fold ${FOLD}."
+            exit 1
+        fi
+    fi
+
+    set -x
+    nnUNetv2_train "$FINETUNE_DS" "$CONFIG" "$FOLD" \
+        -pretrained_weights "$CKPT" 2>&1 | tee "$LOG_DIR/fold_${FOLD}.log"
+    set +x
+
+    echo "Training finished for fold ${FOLD}"
+    echo
 done
