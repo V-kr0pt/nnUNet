@@ -21,7 +21,7 @@ def organize_files(src_input_dir, src_output_dir, dest_images_dir, dest_labels_d
 if __name__ == '__main__':
     # Define paths
     # it should be run from first nnUnet folder!
-    base_dir = '../media/source/breastpectoral_finetunning'  # Change this to your dataset path
+    base_dir = '../media/source/breastpectoral_segmentation_finetunning'  # Change this to your dataset path
     dataset_id = '996'  # Change this to your desired dataset ID
     dataset_name = 'BreastPectoralSegmentation_finetunning'  # Change this to your desired dataset name
 
