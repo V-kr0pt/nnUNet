@@ -201,6 +201,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
 
-    inference = Inference(args.input_folder, args.output_folder, args.id,
+    inference = Inference(args.input_folder, args.output_folder, args.dataset_id,
                            args.skip_pre, args.skip_post, args.restart_preprocess)
     inference.run()
