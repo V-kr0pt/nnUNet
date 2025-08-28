@@ -4,9 +4,10 @@ from run_utils import downsample_nii_file, upsample_nii_file, flip_nii_file
 from post_processing import open_run_and_save_nifti_postprocess
 
 class Inference:
-    def __init__(self, input_folder, output_folder, skip_pre=False, skip_post=False, restart_preprocess=False):
+    def __init__(self, input_folder, output_folder, dataset_id, skip_pre=False, skip_post=False, restart_preprocess=False):
         self.input_folder = input_folder
         self.output_folder = output_folder
+        self.dataset_ID = dataset_id
         self.skip_pre = skip_pre
         self.skip_post = skip_post
         self.restart_preprocess = restart_preprocess
@@ -133,7 +134,7 @@ class Inference:
             'nnUNetv2_predict',
             '-i', self.input_folder,
             '-o', self.output_folder,
-            '-d', '995',
+            '-d', str(self.dataset_ID),
             '-c', '3d_fullres',
             '-f', '0',
             '-step_size', '1',
@@ -188,15 +189,18 @@ if __name__ == "__main__":
 
     DEFAULT_INPUT_FOLDER = os.path.join('..','media','input')
     DEFAULT_OUTPUT_FOLDER = os.path.join('..','media','output')
+    DEFAULT_ID = 995
 
     parser = argparse.ArgumentParser(description="Run nnUNet inference and optional postprocessing.")
     parser.add_argument('-i', '--input_folder', default=DEFAULT_INPUT_FOLDER, help='Path to the input folder')
     parser.add_argument('-o', '--output_folder', default=DEFAULT_OUTPUT_FOLDER, help='Path to the output folder')
+    parser.add_argument('-id', '--dataset_id', default=DEFAULT_ID, help='Dataset model ID')
     parser.add_argument('--skip_pre', action='store_true', help='Skip preprocessing before inference')
     parser.add_argument('--skip_post', action='store_true', help='Skip postprocessing after inference')
     parser.add_argument('--restart_preprocess', action='store_true', help='Restart preprocessing even if it was done before')    
     args = parser.parse_args()
     
 
-    inference = Inference(args.input_folder, args.output_folder, args.skip_pre, args.skip_post, args.restart_preprocess)
+    inference = Inference(args.input_folder, args.output_folder, args.id,
+                           args.skip_pre, args.skip_post, args.restart_preprocess)
     inference.run()
