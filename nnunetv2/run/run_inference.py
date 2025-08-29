@@ -1,5 +1,6 @@
 import subprocess
 import os
+from nnunetv2.paths import nnUNet_results
 from run_utils import downsample_nii_file, upsample_nii_file, flip_nii_file
 from post_processing import open_run_and_save_nifti_postprocess
 
@@ -21,6 +22,23 @@ class Inference:
         if not os.path.exists(output_folder):
             os.makedirs(output_folder)
             print(f"Output folder {output_folder} created.")
+
+
+        # Check paths to upload plans
+        # the trainner is the same for both
+        if int(self.dataset_ID) == 995:
+            plan_name = 'nnUNetPlans'
+            dataset_name = 'Dataset995_BreastPectoralSegmentation'
+        elif int(self.dataset_ID) == 996:
+            plan_name = 'PlansFrom995'
+            dataset_name = 'Dataset996_BreastPectoralSegmentation_finetunning'
+        else:
+            raise ValueError('dataset_ID (-did or dataset_id) should be 995 or 996!')
+        trainer_path = 'nnUNetTrainer__'+plan_name+'__3d_fullres'
+        
+        self.plan_name = plan_name
+        self.plans_path = os.path.join(nnUNet_results, dataset_name, trainer_path, 'plans.json')
+        assert os.path.exists(self.plans_path), f'plans path not found: {self.plans_path}'
 
     def preprocess_file(self, file, input_folder_pp):
         if file.endswith('.nii.gz'):
@@ -136,9 +154,10 @@ class Inference:
             '-o', self.output_folder,
             '-d', str(self.dataset_ID),
             '-c', '3d_fullres',
-            '-f', '0',
-            '-step_size', '1',
-            '--disable_tta',
+            '-p', self.plan_name,
+            '-tr', 'nnUNetTrainer',
+            '-f', '0', '1', '2', '3', '4',
+            '-chk', 'checkpoint_best.pth',
             '-npp', '1'
         ]
         subprocess.run(command, check=True)
@@ -156,7 +175,7 @@ class Inference:
             '-o', self.output_folder,
             '-pp_pkl_file', '/mnt/d/Users/UFPB/vitor/nn_unet/media/nnUNet_results/Dataset995_BreastPectoralSegmentation/nnUNetTrainer__nnUNetPlans__3d_fullres/crossval_results_folds_0_1_2_3_4/postprocessing.pkl',
             '-np', '8',
-            '-plans_json', '/mnt/d/Users/UFPB/vitor/nn_unet/media/nnUNet_results/Dataset995_BreastPectoralSegmentation/nnUNetTrainer__nnUNetPlans__3d_fullres/crossval_results_folds_0_1_2_3_4/plans.json'
+            '-plans_json', self.plans_path
         ]
         subprocess.run(command, check=True)
 
@@ -187,14 +206,14 @@ class Inference:
 if __name__ == "__main__":
     import argparse
 
-    DEFAULT_INPUT_FOLDER = os.path.join('..','media','input')
-    DEFAULT_OUTPUT_FOLDER = os.path.join('..','media','output')
+    DEFAULT_INPUT_FOLDER = os.path.join('..','media','bad_performance_imgs')
+    DEFAULT_OUTPUT_FOLDER = os.path.join('..','media','output_995_bad_performance_imgs')
     DEFAULT_ID = 995
 
     parser = argparse.ArgumentParser(description="Run nnUNet inference and optional postprocessing.")
     parser.add_argument('-i', '--input_folder', default=DEFAULT_INPUT_FOLDER, help='Path to the input folder')
     parser.add_argument('-o', '--output_folder', default=DEFAULT_OUTPUT_FOLDER, help='Path to the output folder')
-    parser.add_argument('-id', '--dataset_id', default=DEFAULT_ID, help='Dataset model ID')
+    parser.add_argument('-did', '--dataset_id', default=DEFAULT_ID, help='Dataset model ID')
     parser.add_argument('--skip_pre', action='store_true', help='Skip preprocessing before inference')
     parser.add_argument('--skip_post', action='store_true', help='Skip postprocessing after inference')
     parser.add_argument('--restart_preprocess', action='store_true', help='Restart preprocessing even if it was done before')    
@@ -203,4 +222,12 @@ if __name__ == "__main__":
 
     inference = Inference(args.input_folder, args.output_folder, args.dataset_id,
                            args.skip_pre, args.skip_post, args.restart_preprocess)
+    
+    confirm_inf_model_str = f'Are sure you want to run inferece for {inference.input_folder} -> {inference.output_folder}\n'
+    confirm_inf_model_str += f'using the model with ID {inference.dataset_ID} ? (Y/n): '
+    
+    if input(confirm_inf_model_str) == 'n':
+        print('Change configs and rerun.')
+        exit()
+
     inference.run()
