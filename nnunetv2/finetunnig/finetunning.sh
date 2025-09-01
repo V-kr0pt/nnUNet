@@ -15,7 +15,7 @@ for FOLD in 0 1 2 3 4; do
     echo "Finetuning dataset : $FINETUNE_DS"
     echo "Configuration      : $CONFIG"
     echo "Pretrained weights : $CKPT"
-    echo "Results will go to : $nnUNet_results/$FINETUNE_DS/nnUNetTrainer__nnUNetPlans__${CONFIG}/fold_${FOLD}"
+    echo "Results will go to : $nnUNet_results/$FINETUNE_DS/nnUNetTrainer__PlansFrom995__${CONFIG}/fold_${FOLD}"
     echo "Log file           : $LOG_DIR/fold_${FOLD}.log"
     echo "============================================================"
 
