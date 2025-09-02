@@ -33,7 +33,7 @@ for FOLD in 0 1 2 3 4; do
 
     set -x
     nnUNetv2_train "$FINETUNE_DS" "$CONFIG" "$FOLD" -p PlansFrom995\
-        -tr mytrainings.lower_lr_Trainer.MyTrainer_LR\
+        -tr MyTrainer_LR\
         -pretrained_weights "$CKPT" 2>&1 | tee "$LOG_DIR/fold_${FOLD}.log"
     set +x
 
