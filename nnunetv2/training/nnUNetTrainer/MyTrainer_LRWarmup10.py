@@ -35,9 +35,8 @@ class MyTrainer_LRWarmup10(nnUNetTrainer):
         else:
             self.lr_scheduler = None  # No scheduler if warmup disabled
 
-        # IMPORTANT: return nothing, nnUNet expects self.optimizer and self.lr_scheduler
-        # to be set as attributes, not returned
-        return
+        # nnUNet expects a tuple (optimizer, scheduler)
+        return self.optimizer, self.lr_scheduler
 
     def on_train_start(self):
         super().on_train_start()
