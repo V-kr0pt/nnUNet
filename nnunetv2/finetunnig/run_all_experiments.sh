@@ -10,5 +10,5 @@ TRAINERS=(
 
 for TRAINER in "${TRAINERS[@]}"; do
     echo ">>> Running trainer: $TRAINER"
-    ./finetune.sh "$TRAINER"
+    ./nnunetv2/finetunnig/finetune.sh "$TRAINER"
 done
