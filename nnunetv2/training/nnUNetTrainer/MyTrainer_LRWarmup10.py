@@ -3,28 +3,17 @@ import torch
 from nnunetv2.training.nnUNetTrainer.nnUNetTrainer import nnUNetTrainer
 
 
-class MyTrainer_LRWarmup(nnUNetTrainer):
+class MyTrainer_LRWarmup10(nnUNetTrainer):
     def __init__(self, plans: dict, configuration: str, fold: int, dataset_json: dict,
                  device: torch.device = torch.device('cuda')):
         super().__init__(plans, configuration, fold, dataset_json, device)
         
         # Default settings
-        self.initial_lr = 1e-4
+        self.initial_lr = 3e-4
         self.warmup_epochs = 10
         self.use_warmup = True
         self.freeze_encoder = False
-        self.freeze_epochs = 0
-
-        # Adjustments via environment variables
-        if os.environ.get("NNUNET_USE_NO_WARMUP", "False") == "True":
-            self.use_warmup = False
-
-        if os.environ.get("NNUNET_FREEZE_ENCODER", "False") == "True":
-            self.freeze_encoder = True
-            self.freeze_epochs = int(os.environ.get("NNUNET_FREEZE_EPOCHS", 0))
-
-        if os.environ.get("NNUNET_INITIAL_LR", None) is not None:
-            self.initial_lr = float(os.environ.get("NNUNET_INITIAL_LR"))
+        self.freeze_epochs = 5
 
     def configure_optimizers(self):
         optimizer = torch.optim.SGD(self.network.parameters(), self.initial_lr,
