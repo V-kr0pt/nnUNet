@@ -1,5 +1,5 @@
 import torch
-from nnUNet.nnunetv2.training.nnUNetTrainer.MyTrainer_LRWarmup10 import MyTrainer_LRWarmup10
+from nnunetv2.training.nnUNetTrainer.MyTrainer_LRWarmup10 import MyTrainer_LRWarmup10
 
 
 class MyTrainer_LRWarmup5(MyTrainer_LRWarmup10):
