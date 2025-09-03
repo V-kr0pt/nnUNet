@@ -23,6 +23,9 @@ class MyTrainer_LRWarmup(nnUNetTrainer):
             self.freeze_encoder = True
             self.freeze_epochs = int(os.environ.get("NNUNET_FREEZE_EPOCHS", 0))
 
+        if os.environ.get("NNUNET_INITIAL_LR", None) is not None:
+            self.initial_lr = float(os.environ.get("NNUNET_INITIAL_LR"))
+
     def configure_optimizers(self):
         optimizer = torch.optim.SGD(self.network.parameters(), self.initial_lr,
                                     momentum=0.99, nesterov=True, weight_decay=3e-5)
