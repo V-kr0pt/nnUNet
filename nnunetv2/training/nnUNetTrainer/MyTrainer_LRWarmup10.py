@@ -32,8 +32,6 @@ class MyTrainer_LRWarmup10(nnUNetTrainer):
             self.lr_scheduler = torch.optim.lr_scheduler.LambdaLR(
                 self.optimizer, lr_lambda=lr_lambda
             )
-        else:
-            self.lr_scheduler = None  # No scheduler if warmup disabled
 
         # nnUNet expects a tuple (optimizer, scheduler)
         return self.optimizer, self.lr_scheduler
