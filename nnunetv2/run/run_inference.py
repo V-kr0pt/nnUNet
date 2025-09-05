@@ -5,10 +5,12 @@ from run_utils import downsample_nii_file, upsample_nii_file, flip_nii_file
 from post_processing import open_run_and_save_nifti_postprocess
 
 class Inference:
-    def __init__(self, input_folder, output_folder, dataset_id, skip_pre=False, skip_post=False, restart_preprocess=False):
+    def __init__(self, input_folder, output_folder, dataset_id, trainer='nnUNetTrainer',
+                  skip_pre=False, skip_post=False, restart_preprocess=False):
         self.input_folder = input_folder
         self.output_folder = output_folder
         self.dataset_ID = dataset_id
+        self.trainer = trainer
         self.skip_pre = skip_pre
         self.skip_post = skip_post
         self.restart_preprocess = restart_preprocess
@@ -34,7 +36,8 @@ class Inference:
             dataset_name = 'Dataset996_BreastPectoralSegmentation_finetunning'
         else:
             raise ValueError('dataset_ID (-did or dataset_id) should be 995 or 996!')
-        trainer_path = 'nnUNetTrainer__'+plan_name+'__3d_fullres'
+        
+        trainer_path = self.trainer+'__'+ plan_name + '__3d_fullres'
         
         self.plan_name = plan_name
         self.plans_path = os.path.join(nnUNet_results, dataset_name, trainer_path, 'plans.json')
@@ -155,10 +158,9 @@ class Inference:
             '-d', str(self.dataset_ID),
             '-c', '3d_fullres',
             '-p', self.plan_name,
-            '-tr', 'nnUNetTrainer',
+            '-tr', self.trainer,
             '-f', '0', '1', '2', '3', '4',
-            '-chk', 'checkpoint_best.pth',
-            '-npp', '1'
+            '-chk', 'checkpoint_best.pth'
         ]
         subprocess.run(command, check=True)
 
@@ -214,6 +216,7 @@ if __name__ == "__main__":
     parser.add_argument('-i', '--input_folder', default=DEFAULT_INPUT_FOLDER, help='Path to the input folder')
     parser.add_argument('-o', '--output_folder', default=DEFAULT_OUTPUT_FOLDER, help='Path to the output folder')
     parser.add_argument('-did', '--dataset_id', default=DEFAULT_ID, help='Dataset model ID')
+    parser.add_argument('-tr', '--trainer', default='nnUNetTrainer', help='Trainer class name')
     parser.add_argument('--skip_pre', action='store_true', help='Skip preprocessing before inference')
     parser.add_argument('--skip_post', action='store_true', help='Skip postprocessing after inference')
     parser.add_argument('--restart_preprocess', action='store_true', help='Restart preprocessing even if it was done before')    
@@ -221,7 +224,7 @@ if __name__ == "__main__":
     
 
     inference = Inference(args.input_folder, args.output_folder, args.dataset_id,
-                           args.skip_pre, args.skip_post, args.restart_preprocess)
+                          args.trainer,args.skip_pre, args.skip_post, args.restart_preprocess)
     
     confirm_inf_model_str = f'Are sure you want to run inferece for {inference.input_folder} -> {inference.output_folder}\n'
     confirm_inf_model_str += f'using the model with ID {inference.dataset_ID} ? (Y/n): '
