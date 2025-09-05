@@ -6,7 +6,7 @@ from post_processing import open_run_and_save_nifti_postprocess
 
 class Inference:
     def __init__(self, input_folder, output_folder, dataset_id, trainer='nnUNetTrainer',
-                  skip_pre=False, skip_post=False, restart_preprocess=False):
+                  fold=['all'], skip_pre=False, skip_post=False, restart_preprocess=False):
         self.input_folder = input_folder
         self.output_folder = output_folder
         self.dataset_ID = dataset_id
@@ -16,6 +16,7 @@ class Inference:
         self.restart_preprocess = restart_preprocess
         self.downsample_factor = 10
         self.files_shape_factor = {}
+        self.fold_range = [str(i) for i in range(5)] if fold==['all'] else fold
 
         # Validate input and output folders
         if not os.path.exists(input_folder):
@@ -159,9 +160,9 @@ class Inference:
             '-c', '3d_fullres',
             '-p', self.plan_name,
             '-tr', self.trainer,
-            '-f', '0', '1', '2', '3', '4',
-            '-chk', 'checkpoint_best.pth'
+            '-chk', 'checkpoint_best.pth',
         ]
+        command += ['-f'] + [str(i) for i in self.fold_range] # Add folds
         subprocess.run(command, check=True)
 
 
@@ -217,6 +218,7 @@ if __name__ == "__main__":
     parser.add_argument('-o', '--output_folder', default=DEFAULT_OUTPUT_FOLDER, help='Path to the output folder')
     parser.add_argument('-did', '--dataset_id', default=DEFAULT_ID, help='Dataset model ID')
     parser.add_argument('-tr', '--trainer', default='nnUNetTrainer', help='Trainer class name')
+    parser.add_argument('-f', '--fold', default=['all'], nargs='+', help='Fold to use for inference (0, 1, 2, 3, 4 or all)')
     parser.add_argument('--skip_pre', action='store_true', help='Skip preprocessing before inference')
     parser.add_argument('--skip_post', action='store_true', help='Skip postprocessing after inference')
     parser.add_argument('--restart_preprocess', action='store_true', help='Restart preprocessing even if it was done before')    
