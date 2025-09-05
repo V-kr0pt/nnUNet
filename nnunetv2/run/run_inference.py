@@ -226,7 +226,8 @@ if __name__ == "__main__":
     
 
     inference = Inference(args.input_folder, args.output_folder, args.dataset_id,
-                          args.trainer,args.skip_pre, args.skip_post, args.restart_preprocess)
+                          args.trainer, args.fold, args.skip_pre, args.skip_post,
+                            args.restart_preprocess)
     
     confirm_inf_model_str = f'Are sure you want to run inferece for {inference.input_folder} -> {inference.output_folder}\n'
     confirm_inf_model_str += f'using the model with ID {inference.dataset_ID} ? (Y/n): '
