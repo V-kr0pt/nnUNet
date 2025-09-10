@@ -13,12 +13,7 @@ fi
 
 TRAINER_NAME="$1"
 
-LOG_NAME="logs_finetune_996"
-LOG_DIR="$nnUNet_results/$FINETUNE_DS/MyTrainer_LRWarmup__PlansFrom995__${CONFIG}__${TRAINER_NAME}/${LOG_NAME}"
-
-mkdir -p "$LOG_DIR"
-
-for FOLD in 0; do
+for FOLD in 0 1 2 3 4; do #0 1 2 3 4; do
     CKPT="$nnUNet_results/$PREV_DS/nnUNetTrainer__nnUNetPlans__${CONFIG}/fold_${FOLD}/checkpoint_best.pth"
 
     echo "============================================================"
@@ -28,7 +23,6 @@ for FOLD in 0; do
     echo "Trainer name    : $TRAINER_NAME"
     echo "Pretrained weights : $CKPT"
     echo "Results will go to : $nnUNet_results/$FINETUNE_DS/MyTrainer_LRWarmup__PlansFrom995__${CONFIG}__${TRAINER_NAME}/fold_${FOLD}"
-    echo "Log file           : $LOG_DIR/fold_${FOLD}_${TRAINER_NAME}.log"
     echo "============================================================"
 
     if [ ! -f "$CKPT" ]; then
@@ -47,8 +41,7 @@ for FOLD in 0; do
     nnUNetv2_train "$FINETUNE_DS" "$CONFIG" "$FOLD" \
         -p PlansFrom995 \
         -tr "$TRAINER_NAME" \
-        -pretrained_weights "$CKPT" \
-        2>&1 | tee "$LOG_DIR/fold_${FOLD}_${TRAINER_NAME}.log"
+        -pretrained_weights "$CKPT" 
     set +x
 
     echo "Training finished for fold ${FOLD} (experiment $TRAINER_NAME)"
