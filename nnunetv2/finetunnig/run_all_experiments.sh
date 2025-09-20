@@ -3,6 +3,8 @@ set -euo pipefail
 
 # Lista de nomes de experimentos
 TRAINERS=(
+    "nnUNetTrainer"
+    "MyTrainer_LR"
     "MyTrainer_LRWarmup5"
     "MyTrainer_LRWarmup10"
     "MyTrainer_LR1e4_nowarmup"

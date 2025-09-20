@@ -13,7 +13,7 @@ fi
 
 TRAINER_NAME="$1"
 
-for FOLD in 0 1 2 3 4; do #0 1 2 3 4; do
+for FOLD in 0 1 2 3 4; do
     CKPT="$nnUNet_results/$PREV_DS/nnUNetTrainer__nnUNetPlans__${CONFIG}/fold_${FOLD}/checkpoint_best.pth"
 
     echo "============================================================"
