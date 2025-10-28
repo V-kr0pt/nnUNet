@@ -7,7 +7,7 @@ import csv
 from collections import deque
 from concurrent.futures import ThreadPoolExecutor
 
-NUMBER_OF_PRELOAD = 3  # Number of images to preload
+NUMBER_OF_PRELOAD = 1  # Number of images to preload
 
 class ImageLoader:
     def __init__(self, input_path, output_path, max_preload=3):
@@ -315,11 +315,11 @@ if __name__ == '__main__':
 
     # Setup paths
     id = 995
-    main_path = os.path.join('finetunning_results', 'bad_performance_imgs')
-    input_path = main_path
-    output_path = f'{id}_output_bad_performance_imgs'
+    #main_path = os.path.join('input_equalized_dataset_test', 'bad_performance_imgs')
+    input_path = 'final_input' #'input_equalized_dataset_test'
+    output_path = 'final_output' #'output_equalized_dataset_test'
     input_path = os.path.join('..', 'media', input_path)
-    output_path = os.path.join('..', 'media', main_path, output_path, output_path+'_PP')
+    output_path = os.path.join('..', 'media', output_path)#, output_path+'_PP')
 
 
     main(input_path, output_path)
